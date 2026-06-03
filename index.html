@@ -503,7 +503,7 @@
             <option value="KRW">🇰🇷 KRW — South Korean Won (₩)</option>
           </select>
         </div>
-        <div class="form-group"><label class="lbl" id="rate-lbl">Default Rate ($/hr)</label><input type="text" inputmode="decimal" pattern="[0-9]*[.,]?[0-9]*" id="s-rate" placeholder="25.00" oninput="saveSetting('rate',this.value.replace(',','.'));refreshAll()"></div>
+        <div class="form-group"><label class="lbl" id="rate-lbl">Default Rate (£/hr)</label><input type="text" inputmode="decimal" pattern="[0-9]*[.,]?[0-9]*" id="s-rate" placeholder="13.50" oninput="saveSetting('rate',this.value.replace(',','.'));refreshAll()"></div>
         <div class="form-group"><label class="lbl">Invoice Prefix</label><input type="text" id="s-prefix" placeholder="INV" oninput="saveSetting('invoicePrefix',this.value)"></div>
         <div class="form-group full"><label class="lbl">Invoice Footer / Additional Notes</label><textarea id="s-invoice-notes" placeholder="e.g. Thank you for your business. GST not applicable." oninput="saveSetting('invoiceNotes',this.value)"></textarea></div>
       </div>
@@ -808,7 +808,7 @@
 // ══════════════════════════════════════════════════════
 //  PWA: CACHE BUST + SERVICE WORKER
 // ══════════════════════════════════════════════════════
-const APP_VERSION = 'v7';
+const APP_VERSION = 'v8';
 
 // On every load — delete any cache that isn't current version
 if ('caches' in window) {
@@ -1540,7 +1540,7 @@ function entryHTML(e,idx){
       <div>
         <label class="lbl">Base Rate (${currSymbol()}/hr)</label>
         <input type="text" inputmode="decimal" pattern="[0-9]*[.,]?[0-9]*"
-          value="${e.rate}" placeholder="${settings.rate||'25.00'}"
+          value="${e.rate}" placeholder="${settings.rate||'13.50'}"
           oninput="_entryLive('${e.id}','rate',this.value)"
           onchange="updateEntryField('${e.id}','rate',this.value.replace(',','.'))">
       </div>
