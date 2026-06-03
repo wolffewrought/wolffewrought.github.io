@@ -1039,6 +1039,9 @@ function loadAll(){
     if(si) sitePresets=JSON.parse(si);
     if(hp) hoursPresets=JSON.parse(hp);
   } catch(e){}
+  // Always enforce GBP — override any saved currency
+  settings.currency = 'GBP';
+  if(!settings.rate || settings.rate === '25.00') settings.rate = '13.50';
 }
 
 function saveSetting(k,v){ settings[k]=v; saveAll(); }
@@ -1082,7 +1085,7 @@ function fmtMoney(v){
   return `${c.symbol}${Number(v||0).toFixed(dec)}`;
 }
 function uuid(){ return crypto.randomUUID(); }
-function newEntry(){ return {id:uuid(),startDate:todayISO(),startTime:'09:00',endDate:todayISO(),endTime:'17:00',description:'',rate:'',segments:[]}; }
+function newEntry(){ return {id:uuid(),startDate:todayISO(),startTime:'09:00',endDate:todayISO(),endTime:'17:00',description:'',rate:'',segments:[],hoursOverride:''}; }
 function newSegment(){ return {id:uuid(),startTime:'',endTime:'',endDate:'',multiplier:'1.5',label:'Time & Half'}; }
 function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
@@ -1403,7 +1406,7 @@ function updateEntryChips(id){
   const hChip = document.getElementById('chip-h-' + id);
   const mChip = document.getElementById('chip-m-' + id);
   const bChip = document.getElementById('chip-breakdown-' + id);
-  if(hChip) hChip.textContent = '⏱ ' + fmtHours(calc.totalHours);
+  if(hChip) hChip.textContent = '⏱ ' + fmtHours(calc.totalHours) + (calc.overridden ? ' ✏️' : '');
   if(mChip) mChip.textContent = '💰 ' + fmtMoney(calc.total);
   if(bChip) bChip.textContent = calcBreakdownText(calc);
 
@@ -1540,6 +1543,16 @@ function entryHTML(e,idx){
           oninput="_entryLive('${e.id}','rate',this.value)"
           onchange="updateEntryField('${e.id}','rate',this.value.replace(',','.'))">
       </div>
+      <div>
+        <label class="lbl">Billable Hours Override
+          <span style="font-size:10px;font-weight:400;color:#94a3b8;display:block;margin-top:1px">Leave blank to use shift times</span>
+        </label>
+        <input type="text" inputmode="decimal" pattern="[0-9]*[.,]?[0-9]*"
+          value="${e.hoursOverride||''}" placeholder="${fmtHours(calc.shiftHours)} (from times)"
+          oninput="_entryLive('${e.id}','hoursOverride',this.value)"
+          onchange="updateEntryField('${e.id}','hoursOverride',this.value.replace(',','.'))">
+        ${calc.overridden?`<div style="font-size:11px;color:#d97706;margin-top:3px">⚠️ Overriding shift hours (${fmtHours(calc.shiftHours)})</div>`:''}
+      </div>
     </div>
     ${hoursPillsHTML}
 
@@ -1611,14 +1624,24 @@ function calcSegHours(startDate, startTime, endDate, endTime){
 
 function calcEntryTotal(e){
   const baseRate = parseFloat(e.rate||settings.rate||0);
-  const totalShiftHours = calcHours(e.startDate,e.startTime,e.endDate,e.endTime)||0;
+  const shiftHours = calcHours(e.startDate,e.startTime,e.endDate,e.endTime)||0;
+  // hoursOverride lets user manually set billable hours without changing shift times
+  const override = e.hoursOverride!==''&&e.hoursOverride!==undefined ? parseFloat(e.hoursOverride) : null;
+  const totalShiftHours = override!==null && !isNaN(override) ? override : shiftHours;
   const segs = e.segments||[];
 
   if(segs.length===0){
-    return { totalHours: totalShiftHours||null, total: totalShiftHours>0?totalShiftHours*baseRate:0, breakdown:[] };
+    return {
+      totalHours: totalShiftHours||null,
+      shiftHours: shiftHours||null, // actual shift duration (unaffected)
+      overridden: override!==null,
+      total: totalShiftHours>0?totalShiftHours*baseRate:0,
+      breakdown:[]
+    };
   }
 
-  // Calculate each segment
+  // Calculate each segment using override hours proportionally if set
+  const hoursToUse = totalShiftHours;
   let segTotalHours = 0;
   const breakdown = segs.map(s=>{
     const mult = parseFloat(s.multiplier)||1;
@@ -1628,8 +1651,7 @@ function calcEntryTotal(e){
     return { label: s.label||`${mult}×`, hours:h, rate:segRate, total:h*segRate, mult };
   });
 
-  // Remaining hours at base rate
-  const remainHours = Math.max(0, totalShiftHours - segTotalHours);
+  const remainHours = Math.max(0, hoursToUse - segTotalHours);
   const remainTotal = remainHours * baseRate;
   let grandTotal = remainTotal + breakdown.reduce((s,b)=>s+b.total,0);
 
@@ -1637,7 +1659,7 @@ function calcEntryTotal(e){
     breakdown.unshift({ label:'Base', hours:remainHours, rate:baseRate, total:remainTotal, mult:1 });
   }
 
-  return { totalHours: totalShiftHours||null, total: grandTotal, breakdown };
+  return { totalHours: totalShiftHours||null, shiftHours: shiftHours||null, overridden: override!==null, total: grandTotal, breakdown };
 }
 
 function calcBreakdownText(calc){
