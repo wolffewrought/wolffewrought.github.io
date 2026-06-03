@@ -806,48 +806,44 @@
 
 <script>
 // ══════════════════════════════════════════════════════
-//  PWA: CACHE BUST + SERVICE WORKER
+//  PWA: SERVICE WORKER — offline support + auto-update
 // ══════════════════════════════════════════════════════
-const APP_VERSION = 'v8';
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js', { scope: '/' })
+      .then(reg => {
 
-// On every load — delete any cache that isn't current version
-if ('caches' in window) {
-  caches.keys().then(keys => {
-    keys.forEach(key => {
-      if (!key.includes(APP_VERSION)) {
-        caches.delete(key);
+        // Check for updates every time the page loads
+        reg.update();
+
+        // New SW found — activate it immediately
+        reg.addEventListener('updatefound', () => {
+          const newSW = reg.installing;
+          newSW.addEventListener('statechange', () => {
+            if (newSW.state === 'installed') {
+              if (navigator.serviceWorker.controller) {
+                // Tell new SW to skip waiting and take over
+                newSW.postMessage({ type: 'SKIP_WAITING' });
+              }
+            }
+          });
+        });
+
+        // If a SW is already waiting, activate it now
+        if (reg.waiting) {
+          reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+        }
+      })
+      .catch(() => {});
+
+    // When SW takes over, reload once to get fresh content
+    let refreshing = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (!refreshing) {
+        refreshing = true;
+        window.location.reload();
       }
     });
-  });
-}
-
-if ('serviceWorker' in navigator) {
-  // Unregister ALL old service workers first
-  navigator.serviceWorker.getRegistrations().then(regs => {
-    const unregisterPromises = regs.map(reg => reg.unregister());
-    return Promise.all(unregisterPromises);
-  }).then(() => {
-    // Now register fresh
-    return navigator.serviceWorker.register('/sw.js', { scope: '/' });
-  }).then(reg => {
-    reg.addEventListener('updatefound', () => {
-      const nw = reg.installing;
-      nw.addEventListener('statechange', () => {
-        if (nw.state === 'installed' && navigator.serviceWorker.controller) {
-          const t = document.getElementById('update-toast');
-          if (t) t.classList.add('show');
-        }
-      });
-    });
-    // If there's a waiting SW, activate it immediately
-    if (reg.waiting) {
-      reg.waiting.postMessage({ type: 'SKIP_WAITING' });
-    }
-  }).catch(() => {});
-
-  // When SW controller changes, reload to get fresh content
-  navigator.serviceWorker.addEventListener('controllerchange', () => {
-    window.location.reload();
   });
 }
 
