@@ -2347,9 +2347,9 @@ function doExportPDF(filteredEntries, periodLabel){
 <div class="bill-row"><div class="client"><div class="client-lbl">Bill To</div><div class="client-name">${esc(settings.clientName)||'Client Name'}</div>${clientExtra.length?`<div class="client-det">${clientExtra.join('<br>')}</div>`:''}</div></div>
 ${settings.clientNotes?`<div class="notes-box">📋 <strong>Notes:</strong> ${esc(settings.clientNotes)}</div>`:''}
 <table><thead><tr><th>#</th><th>Description</th><th>Date</th><th>Start</th><th>End</th><th class="num">Hours</th><th class="num">Rate</th><th class="num">Amount</th></tr></thead><tbody>${tableRows}</tbody></table>
-<div class="tots"><div class="tots-box"><div class="tots-row"><span>Total Hours</span><span>${fmtHours(totalHours)}</span></div><div class="tots-row grand"><span>TOTAL DUE</span><span>${fmtMoney(grandTotal)}</span></div></div></div>
+<div class="tots"><div class="tots-box"><div class="tots-row"><span>Total Hours</span><span>${fmtHours(totalHours)}</span></div><div class="tots-row grand"><span>Total</span><span>${fmtMoney(grandTotal)}</span></div></div></div>
 ${bankHTML}${settings.invoiceNotes?`<div class="inv-notes">${esc(settings.invoiceNotes)}</div>`:''}
-<div class="footer">Thank you for your business &bull; Generated ${new Date().toLocaleString()}</div></body></html>`;
+<div class="footer">Thank you for your business</div></body></html>`;
   openPDF(html, invNum);
   invoiceCounter++; saveAll();
 }
@@ -2530,7 +2530,7 @@ function buildItemsTableHTML(itemList){
   const totRows=`<div class="tots"><div class="tots-box">
     ${hasTax?`<div class="tots-row"><span>Subtotal</span><span>${fmtMoney(subtotal)}</span></div>
     <div class="tots-row"><span>${taxLabel} (${taxRate}%)</span><span>${fmtMoney(tax)}</span></div>`:''}
-    <div class="tots-row grand"><span>TOTAL DUE</span><span>${fmtMoney(total)}</span></div>
+    <div class="tots-row grand"><span>Total</span><span>${fmtMoney(total)}</span></div>
   </div></div>`;
   return { rows:`<table><thead><tr><th>#</th><th>Description</th><th>Category</th><th class="num">Qty</th><th class="num">Unit Price</th>${hasTax?`<th style="text-align:center">${taxLabel}</th>`:''}<th class="num">Amount</th></tr></thead><tbody>${rows}</tbody></table>`, totRows, total };
 }
@@ -2539,7 +2539,7 @@ function doExportItemsPDF(itemList, periodLabel){
   const invNum=getInvoiceNum();
   const {headerHTML,bankHTML}=buildPDFHeader(invNum,periodLabel);
   const {rows,totRows}=buildItemsTableHTML(itemList);
-  const html=`${headerHTML}${rows}${totRows}${bankHTML}${settings.invoiceNotes?`<div class="inv-notes">${esc(settings.invoiceNotes)}</div>`:''}<div class="footer">Thank you for your business &bull; Generated ${new Date().toLocaleString()}</div></body></html>`;
+  const html=`${headerHTML}${rows}${totRows}${bankHTML}${settings.invoiceNotes?`<div class="inv-notes">${esc(settings.invoiceNotes)}</div>`:''}<div class="footer">Thank you for your business</div></body></html>`;
   openPDF(html, invNum);
   invoiceCounter++; saveAll();
 }
@@ -2575,9 +2575,9 @@ function doExportCombinedPDF(filteredEntries, itemList, periodLabel){
     ${filteredEntries.length?`<div class="tots-row"><span>Time Subtotal</span><span>${fmtMoney(timeTotal)}</span></div>`:''}
     ${itemList.length?`<div class="tots-row"><span>Items Subtotal</span><span>${fmtMoney(itemSubtotal)}</span></div>`:''}
     ${taxRate>0&&itemList.length?`<div class="tots-row"><span>${taxLabel} (${taxRate}%)</span><span>${fmtMoney(tax)}</span></div>`:''}
-    <div class="tots-row grand"><span>TOTAL DUE</span><span>${fmtMoney(grandTotal)}</span></div>
+    <div class="tots-row grand"><span>Total</span><span>${fmtMoney(grandTotal)}</span></div>
   </div></div>`;
-  const html=`${headerHTML}${combinedTable}${totsHTML}${bankHTML}${settings.invoiceNotes?`<div class="inv-notes">${esc(settings.invoiceNotes)}</div>`:''}<div class="footer">Thank you for your business &bull; Generated ${new Date().toLocaleString()}</div></body></html>`;
+  const html=`${headerHTML}${combinedTable}${totsHTML}${bankHTML}${settings.invoiceNotes?`<div class="inv-notes">${esc(settings.invoiceNotes)}</div>`:''}<div class="footer">Thank you for your business</div></body></html>`;
   openPDF(html, invNum);
   invoiceCounter++; saveAll();
 }
