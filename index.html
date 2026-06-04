@@ -623,11 +623,16 @@
     <div class="card">
       <div class="card-title"><span class="icon">🔍</span> Invoice Preview</div>
       <div class="preview-table">
-        <div class="preview-row"><span>Invoice Number</span><strong id="prev-invnum">INV-0001</strong></div>
+        <div class="preview-row">
+          <span>Invoice Number</span>
+          <input type="text" id="prev-invnum" value="INV-0001"
+            style="border:1.5px solid var(--border);border-radius:6px;padding:5px 10px;font-size:14px;font-weight:700;color:var(--navy);text-align:right;width:140px;background:#fafbff;font-family:inherit"
+            oninput="customInvNum=this.value">
+        </div>
         <div class="preview-row"><span>Period</span><strong id="prev-period">—</strong></div>
         <div class="preview-row"><span>Entries in Range</span><strong id="prev-count">0</strong></div>
         <div class="preview-row"><span>Total Hours</span><strong id="prev-hours">0h 00m</strong></div>
-        <div class="preview-row grand"><span>Total Due</span><strong id="prev-total">$0.00</strong></div>
+        <div class="preview-row grand"><span>Total Due</span><strong id="prev-total">£0.00</strong></div>
       </div>
     </div>
 
@@ -1007,6 +1012,7 @@ let settings = {
 let entries = [];
 let items = [];
 let invoiceCounter = 1;
+let customInvNum = ''; // user-editable override
 let sitePresets = [];   // [{id, name}]
 let hoursPresets = [];  // [{id, label, startTime, endTime, nextDay}]
 
@@ -1945,7 +1951,11 @@ function getFilteredEntries(){
     return true;
   });
 }
-function getInvoiceNum(){ return `${settings.invoicePrefix||'INV'}-${String(invoiceCounter).padStart(4,'0')}`; }
+function getInvoiceNum(){
+  const el=document.getElementById('prev-invnum');
+  if(el&&el.value.trim()) return el.value.trim();
+  return `${settings.invoicePrefix||'INV'}-${String(invoiceCounter).padStart(4,'0')}`;
+}
 function getPeriodLabel(){
   const s=document.getElementById('exp-start').value;
   const st=document.getElementById('exp-start-time')?.value||'00:00';
@@ -1979,8 +1989,12 @@ function updatePreview(){
   const hoursEl=document.getElementById('prev-hours');
   if(countEl) countEl.textContent=type==='items'?`${items.length} items`:type==='combined'?`${f.length} entries + ${items.length} items`:f.length;
   if(hoursEl) hoursEl.textContent=type==='items'?'—':fmtHours(totalH);
-  document.getElementById('prev-invnum').textContent=getInvoiceNum();
   document.getElementById('prev-period').textContent=type==='items'?fmtDate(todayISO(),fmt):getPeriodLabel();
+  // Only auto-update invoice number if user hasn't typed a custom one
+  const invEl=document.getElementById('prev-invnum');
+  if(invEl&&document.activeElement!==invEl){
+    invEl.value=`${settings.invoicePrefix||'INV'}-${String(invoiceCounter).padStart(4,'0')}`;
+  }
   document.getElementById('prev-total').textContent=fmtMoney(totalM);
 
   const has=type==='items'?items.length>0:f.length>0||(type==='combined'&&items.length>0);
@@ -2342,55 +2356,142 @@ ${bankHTML}${settings.invoiceNotes?`<div class="inv-notes">${esc(settings.invoic
 
 function doExportExcel(filteredEntries, periodLabel){
   if(!filteredEntries.length){alert('No entries to export.');return;}
-  const invNum=getInvoiceNum(); const fmt=settings.dateFormat;
+  const invNum=getInvoiceNum();
+  const fmt=settings.dateFormat;
   const wb=XLSX.utils.book_new();
-  const infoData=[['INVOICE',invNum],['Period',periodLabel],['Date',fmtDate(todayISO(),fmt)],[],['── YOUR BUSINESS ──',''],['Business Name',settings.businessName||''],['ABN',settings.abn||''],['Email',settings.email||''],['Phone',settings.phone||''],['Website',settings.website||''],['Address',settings.address||''],[],['── CLIENT ──',''],['Client Name',settings.clientName||''],['Contact',settings.clientContact||''],['Client Email',settings.clientEmail||''],['Client Phone',settings.clientPhone||''],['Client Address',settings.clientAddress||''],['Client Notes',settings.clientNotes||''],[],['── BANKING ──',''],['Account Name',settings.bankName||''],['Bank',settings.bankBank||''],['BSB',settings.bankBSB||''],['Account Number',settings.bankAccount||''],['PayID',settings.bankPayID||''],['SWIFT/BIC',settings.bankSwift||''],['Payment Terms',settings.paymentTerms||'']];
-  const wsInfo=XLSX.utils.aoa_to_sheet(infoData); wsInfo['!cols']=[{wch:22},{wch:44}]; XLSX.utils.book_append_sheet(wb,wsInfo,'Invoice Info');
+  const sym=currSymbol();
 
-  // Entries with segment expansion
-  const headers=['#','Description','Start Date','Start Time','End Date','End Time','Hours Worked','Base Rate ('+currSymbol()+'/hr)','Segment','Seg Hours','Seg Rate','Seg Amount','Entry Total ('+currSymbol()+')'];
-  const dataRows=[];
-  filteredEntries.forEach((e,i)=>{
-    const calc=calcEntryTotal(e);
-    const baseRate=parseFloat(e.rate||settings.rate||0);
-    const totalHrs=parseFloat((calc.totalHours||0).toFixed(4));
-    const totalAmt=parseFloat(calc.total.toFixed(2));
-    if(!calc.breakdown||calc.breakdown.length===0){
-      // No segments — simple single row
-      dataRows.push([i+1, e.description||'', fmtDate(e.startDate,fmt), e.startTime,
-        fmtDate(e.endDate,fmt), e.endTime, totalHrs, baseRate,
-        'Standard', totalHrs, baseRate, totalAmt, totalAmt]);
-    } else if(calc.breakdown.length===1){
-      // Single segment — one row
-      const b=calc.breakdown[0];
-      dataRows.push([i+1, e.description||'', fmtDate(e.startDate,fmt), e.startTime,
-        fmtDate(e.endDate,fmt), e.endTime, totalHrs, baseRate,
-        b.label||'Standard', parseFloat(b.hours.toFixed(4)),
-        parseFloat(b.rate.toFixed(2)), parseFloat(b.total.toFixed(2)), totalAmt]);
-    } else {
-      // Multiple segments — expand into sub-rows
-      calc.breakdown.forEach((b,bi)=>{
-        dataRows.push([
-          bi===0?i+1:'', bi===0?(e.description||''):'',
-          bi===0?fmtDate(e.startDate,fmt):'', bi===0?e.startTime:'',
-          bi===0?fmtDate(e.endDate,fmt):'', bi===0?e.endTime:'',
-          bi===0?totalHrs:'', bi===0?baseRate:'',
-          b.label||'Standard', parseFloat(b.hours.toFixed(4)),
-          parseFloat(b.rate.toFixed(2)), parseFloat(b.total.toFixed(2)),
-          bi===0?totalAmt:''
-        ]);
-      });
-    }
+  // ── Build sheet data ──────────────────────────────
+  // Row 1: Client info (left A-D) | User info (right F-I)
+  // Rows 2-6: More contact details side by side
+  // Row 8: Invoice details
+  // Row 10: Column headers
+  // Rows 11-70: Up to 60 data rows (one per site/entry)
+  // Row 71: Summary row
+
+  const sheetData = [];
+
+  // Header block — client left, your business right
+  sheetData.push([
+    'CLIENT', settings.clientName||'',  '', '',  '',
+    'YOUR BUSINESS', settings.businessName||''
+  ]);
+  sheetData.push([
+    'Contact', settings.clientContact||'', '', '',  '',
+    'ABN / Tax', settings.abn||''
+  ]);
+  sheetData.push([
+    'Email', settings.clientEmail||'', '', '',  '',
+    'Email', settings.email||''
+  ]);
+  sheetData.push([
+    'Phone', settings.clientPhone||'', '', '',  '',
+    'Phone', settings.phone||''
+  ]);
+  sheetData.push([
+    'Address', settings.clientAddress||'', '', '',  '',
+    'Address', settings.address||''
+  ]);
+  sheetData.push([]); // blank row
+
+  // Invoice details row
+  sheetData.push([
+    'INVOICE #', invNum, '', '',  '',
+    'Period', periodLabel
+  ]);
+  sheetData.push([
+    'Date', fmtDate(todayISO(),fmt), '', '',  '',
+    'Currency', settings.currency||'GBP'
+  ]);
+  sheetData.push([]); // blank row
+
+  // Column headers (row 10)
+  sheetData.push([
+    'Site / Description',
+    'Start Date & Time',
+    'End Date & Time',
+    'Hours Worked',
+    `Hourly Rate (${sym})`,
+    `Total Pay (${sym})`
+  ]);
+
+  // Data rows — up to 60 entries
+  const maxRows = 60;
+  const dataStartRow = sheetData.length + 1; // 1-indexed for Excel formulas
+
+  filteredEntries.slice(0, maxRows).forEach((e, i) => {
+    const calc = calcEntryTotal(e);
+    const baseRate = parseFloat(e.rate||settings.rate||0);
+    const hours = parseFloat((calc.totalHours||0).toFixed(4));
+    const startDT = `${fmtDate(e.startDate,fmt)} ${e.startTime||''}`.trim();
+    const endDT   = `${fmtDate(e.endDate||e.startDate,fmt)} ${e.endTime||''}`.trim();
+    sheetData.push([
+      e.description||'',
+      startDT,
+      endDT,
+      hours,
+      baseRate,
+      parseFloat(calc.total.toFixed(2))
+    ]);
   });
-  const wsData=XLSX.utils.aoa_to_sheet([headers,...dataRows]);
-  wsData['!cols']=[{wch:4},{wch:22},{wch:12},{wch:10},{wch:12},{wch:10},{wch:12},{wch:10},{wch:16},{wch:12},{wch:10},{wch:12},{wch:12}];
-  const lastDataRow=dataRows.length+1;
-  XLSX.utils.sheet_add_aoa(wsData,[['','','','','','','TOTAL','','','','','',{f:`SUM(M2:M${lastDataRow})`}]],{origin:`A${lastDataRow+1}`});
-  XLSX.utils.book_append_sheet(wb,wsData,'Entries');
 
-  const bankData=[['Payment Details',''],['Account Name',settings.bankName||''],['Bank',settings.bankBank||''],['BSB',settings.bankBSB||''],['Account Number',settings.bankAccount||''],['PayID',settings.bankPayID||''],['SWIFT/BIC',settings.bankSwift||''],['Payment Terms',settings.paymentTerms||'']];
-  const wsBank=XLSX.utils.aoa_to_sheet(bankData); wsBank['!cols']=[{wch:20},{wch:40}]; XLSX.utils.book_append_sheet(wb,wsBank,'Banking Details');
-  XLSX.writeFile(wb,`Invoice_${invNum}.xlsx`);
+  // Pad to 60 rows if fewer entries
+  const rowsFilled = filteredEntries.slice(0,maxRows).length;
+  for(let i=rowsFilled; i<maxRows; i++){
+    sheetData.push(['','','','','','']);
+  }
+
+  // Summary row
+  const dataEndRow = dataStartRow + maxRows - 1;
+  sheetData.push([
+    'TOTAL',
+    '',
+    '',
+    { f: `SUM(D${dataStartRow}:D${dataEndRow})` },
+    '',
+    { f: `SUM(F${dataStartRow}:F${dataEndRow})` }
+  ]);
+
+  // Build worksheet
+  const ws = XLSX.utils.aoa_to_sheet(sheetData);
+
+  // Column widths
+  ws['!cols'] = [
+    {wch:28}, // Site/Description
+    {wch:20}, // Start
+    {wch:20}, // End
+    {wch:14}, // Hours
+    {wch:16}, // Rate
+    {wch:16}, // Total
+    {wch:4},  // gap
+    {wch:18}, // right side labels
+    {wch:30}  // right side values
+  ];
+
+  // Merge cells for labels in header
+  ws['!merges'] = [
+    {s:{r:0,c:1},e:{r:0,c:3}}, // client name spans
+    {s:{r:0,c:6},e:{r:0,c:8}}, // business name spans
+  ];
+
+  XLSX.utils.book_append_sheet(wb, ws, 'Invoice');
+
+  // Banking sheet
+  const bankData=[
+    ['PAYMENT DETAILS',''],
+    ['Account Name', settings.bankName||''],
+    ['Bank',         settings.bankBank||''],
+    ['BSB',          settings.bankBSB||''],
+    ['Account No.',  settings.bankAccount||''],
+    ['PayID',        settings.bankPayID||''],
+    ['SWIFT/BIC',    settings.bankSwift||''],
+    ['Payment Terms',settings.paymentTerms||'']
+  ];
+  const wsBank=XLSX.utils.aoa_to_sheet(bankData);
+  wsBank['!cols']=[{wch:18},{wch:36}];
+  XLSX.utils.book_append_sheet(wb, wsBank, 'Banking');
+
+  XLSX.writeFile(wb, `Invoice_${invNum}.xlsx`);
   invoiceCounter++; saveAll();
 }
 
