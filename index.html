@@ -1088,12 +1088,42 @@ function currSymbol(){ return (CURRENCIES[settings.currency||'GBP']||CURRENCIES.
 function fmtMoney(v){
   const c=CURRENCIES[settings.currency||'GBP']||CURRENCIES.AUD;
   const dec=c.decimals!==undefined?c.decimals:2;
-  return `${c.symbol}${Number(v||0).toFixed(dec)}`;
+  return `${c.symbol}${num(v).toFixed(dec)}`;
 }
 function uuid(){ return crypto.randomUUID(); }
 function newEntry(){ return {id:uuid(),startDate:todayISO(),startTime:'09:00',endDate:todayISO(),endTime:'17:00',description:'',rate:'',segments:[],hoursOverride:''}; }
 function newSegment(){ return {id:uuid(),startTime:'',endTime:'',endDate:'',multiplier:'1.5',label:'Time & Half'}; }
-function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+/* Quotes matter as much as angle brackets: esc() output goes straight into
+   value="..." attributes, so an unescaped " ends the attribute early and
+   every character after it is dropped. A description of 26" copper pipe
+   stored fine and redrew as 26. String() so a number cannot throw. */
+function esc(s){ return String(s==null?'':s)
+  .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+  .replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+
+/* parseFloat('£13.50') is NaN, and NaN is falsy, so the usual ||0 guard
+   turned a mistyped rate into a silent £0.00 rather than a visible error.
+   Strip what a person actually types - currency signs, spaces, thousands
+   separators - then parse. */
+function num(v){
+  if(typeof v==='number') return isFinite(v)?v:0;
+  const n=parseFloat(String(v==null?'':v).replace(/[^0-9.\-]/g,''));
+  return isFinite(n)?n:0;
+}
+/* What a numeric field should read back as, so the person sees what was
+   actually stored instead of the text they typed. */
+function cleanNum(v){ return String(v==null?'':v).replace(/[^0-9.\-]/g,''); }
+
+/* XLSX is fetched from a CDN. Until it has been downloaded once it is
+   simply not there, and every export path went straight to
+   XLSX.utils.book_new() - a ReferenceError, so the button did nothing at
+   all and said nothing either. The service worker now precaches it, but a
+   very first run with no signal still has to explain itself. */
+function xlsxReady(){
+  if(typeof XLSX!=='undefined') return true;
+  alert('The spreadsheet library has not been downloaded yet, so Excel export is unavailable offline.\n\nConnect to the internet once and reopen the app - after that it is stored on the device and works offline.\n\nPDF export works now.');
+  return false;
+}
 
 // ══════════════════════════════════════════════════════
 //  THEME
@@ -1412,8 +1442,13 @@ function updateEntryChips(id){
   const hChip = document.getElementById('chip-h-' + id);
   const mChip = document.getElementById('chip-m-' + id);
   const bChip = document.getElementById('chip-breakdown-' + id);
-  if(hChip) hChip.textContent = '⏱ ' + fmtHours(calc.totalHours) + (calc.overridden ? ' ✏️' : '');
-  if(mChip) mChip.textContent = '💰 ' + fmtMoney(calc.total);
+  /* The minimised row and the expanded footer reuse these two ids but not
+     their format: the mini grid puts its own label above the value, so an
+     icon prefix written into it is wrong. Only one is ever in the DOM -
+     entryHTML returns early when minimised - so ask which one this is. */
+  const isMini = collapsedEntries.has(id);
+  if(hChip) hChip.textContent = (isMini?'':'⏱ ') + fmtHours(calc.totalHours) + (calc.overridden ? ' ✏️' : '');
+  if(mChip) mChip.textContent = (isMini?'':'💰 ') + fmtMoney(calc.total);
   if(bChip) bChip.textContent = calcBreakdownText(calc);
 
   const sdFmt = document.getElementById('fmt-sd-' + id);
@@ -1454,7 +1489,7 @@ function entryHTML(e,idx){
   const segs = e.segments||[];
   const mini = collapsedEntries.has(e.id);
   const fmt = settings.dateFormat;
-  const baseRate = parseFloat(e.rate||settings.rate||0);
+  const baseRate = num(e.rate!==''&&e.rate!=null?e.rate:settings.rate);
 
   if(mini){
     // ── Minimised view ──
@@ -1547,7 +1582,7 @@ function entryHTML(e,idx){
         <input type="text" inputmode="decimal" pattern="[0-9]*[.,]?[0-9]*"
           value="${e.rate}" placeholder="${settings.rate||'13.50'}"
           oninput="_entryLive('${e.id}','rate',this.value)"
-          onchange="updateEntryField('${e.id}','rate',this.value.replace(',','.'))">
+          onchange="updateEntryField('${e.id}','rate',this.value.replace(',','.'));this.value=cleanNum(this.value)">
       </div>
       <div>
         <label class="lbl">Billable Hours Override
@@ -1582,7 +1617,7 @@ function entryHTML(e,idx){
 }
 
 function segmentHTML(e,s){
-  const baseRate = parseFloat(e.rate||settings.rate||0);
+  const baseRate = num(e.rate!==''&&e.rate!=null?e.rate:settings.rate);
   const mult = parseFloat(s.multiplier)||1;
   const segRate = baseRate * mult;
   const h = s.startTime&&s.endTime ? calcSegHours(e.startDate, s.startTime, s.endDate||e.startDate, s.endTime) : null;
@@ -1629,10 +1664,10 @@ function calcSegHours(startDate, startTime, endDate, endTime){
 }
 
 function calcEntryTotal(e){
-  const baseRate = parseFloat(e.rate||settings.rate||0);
+  const baseRate = num(e.rate!==''&&e.rate!=null?e.rate:settings.rate);
   const shiftHours = calcHours(e.startDate,e.startTime,e.endDate,e.endTime)||0;
   // hoursOverride lets user manually set billable hours without changing shift times
-  const override = e.hoursOverride!==''&&e.hoursOverride!==undefined ? parseFloat(e.hoursOverride) : null;
+  const override = e.hoursOverride!==''&&e.hoursOverride!==undefined ? num(e.hoursOverride) : null;
   const totalShiftHours = override!==null && !isNaN(override) ? override : shiftHours;
   const segs = e.segments||[];
 
@@ -1822,14 +1857,14 @@ function _itemLive(id, field, val){
 }
 
 function calcItemTotal(item){
-  const qty=parseFloat(item.qty)||0;
-  const price=parseFloat(item.unitPrice)||0;
+  const qty=num(item.qty);
+  const price=num(item.unitPrice);
   return qty*price;
 }
 
 function calcItemsSubtotal(){ return items.reduce((s,i)=>s+calcItemTotal(i),0); }
 function calcItemsTax(){
-  const rate=parseFloat(settings.taxRate)||0;
+  const rate=num(settings.taxRate);
   if(!rate) return 0;
   const taxable=items.filter(i=>i.taxable!==false).reduce((s,i)=>s+calcItemTotal(i),0);
   return taxable*rate/100;
@@ -1870,7 +1905,7 @@ function itemHTML(item, idx){
       <div><label class="lbl">Qty</label>
         <input type="text" inputmode="decimal" value="${item.qty}" placeholder="1"
           oninput="_itemLive('${item.id}','qty',this.value)"
-          onchange="updateItemField('${item.id}','qty',this.value.replace(',','.'))"></div>
+          onchange="updateItemField('${item.id}','qty',this.value.replace(',','.'));this.value=cleanNum(this.value)"></div>
       <div><label class="lbl">Unit (optional)</label>
         <input type="text" value="${esc(item.unit)}" placeholder="hrs, kg, ea…"
           oninput="_itemLive('${item.id}','unit',this.value)"
@@ -1878,7 +1913,7 @@ function itemHTML(item, idx){
       <div><label class="lbl">Unit Price (${currSymbol()})</label>
         <input type="text" inputmode="decimal" value="${item.unitPrice}" placeholder="0.00"
           oninput="_itemLive('${item.id}','unitPrice',this.value)"
-          onchange="updateItemField('${item.id}','unitPrice',this.value.replace(',','.'))"></div>
+          onchange="updateItemField('${item.id}','unitPrice',this.value.replace(',','.'));this.value=cleanNum(this.value)"></div>
     </div>
     <div style="margin-top:10px">
       <div class="form-group" style="max-width:280px">
@@ -2321,7 +2356,7 @@ function doExportPDF(filteredEntries, periodLabel){
   const invNum=getInvoiceNum(); const fmt=settings.dateFormat;
   const rows=filteredEntries.map(e=>{
     const calc=calcEntryTotal(e);
-    return {...e, hours:calc.totalHours, total:calc.total, breakdown:calc.breakdown, baseRate:parseFloat(e.rate||settings.rate||0)};
+    return {...e, hours:calc.totalHours, total:calc.total, breakdown:calc.breakdown, baseRate:num(e.rate!==''&&e.rate!=null?e.rate:settings.rate)};
   });
   const grandTotal=rows.reduce((s,r)=>s+r.total,0);
   const totalHours=rows.reduce((s,r)=>s+(r.hours||0),0);
@@ -2355,6 +2390,7 @@ ${bankHTML}${settings.invoiceNotes?`<div class="inv-notes">${esc(settings.invoic
 }
 
 function doExportExcel(filteredEntries, periodLabel){
+  if(!xlsxReady()) return;
   if(!filteredEntries.length){alert('No entries to export.');return;}
   const invNum=getInvoiceNum();
   const fmt=settings.dateFormat;
@@ -2421,7 +2457,7 @@ function doExportExcel(filteredEntries, periodLabel){
 
   filteredEntries.slice(0, maxRows).forEach((e, i) => {
     const calc = calcEntryTotal(e);
-    const baseRate = parseFloat(e.rate||settings.rate||0);
+    const baseRate = num(e.rate!==''&&e.rate!=null?e.rate:settings.rate);
     const hours = parseFloat((calc.totalHours||0).toFixed(4));
     const startDT = `${fmtDate(e.startDate,fmt)} ${e.startTime||''}`.trim();
     const endDT   = `${fmtDate(e.endDate||e.startDate,fmt)} ${e.endTime||''}`.trim();
@@ -2550,7 +2586,7 @@ function doExportCombinedPDF(filteredEntries, itemList, periodLabel){
   // Time section
   const timeRows=filteredEntries.map((e,i)=>{
     const calc=calcEntryTotal(e);
-    const baseRate=parseFloat(e.rate||settings.rate||0);
+    const baseRate=num(e.rate!==''&&e.rate!=null?e.rate:settings.rate);
     if(!calc.breakdown||calc.breakdown.length<=1){
       return `<tr><td>${i+1}</td><td>${esc(e.description)||'—'}</td><td>${fmtDate(e.startDate,fmt)}${e.startDate!==e.endDate?` → ${fmtDate(e.endDate,fmt)}`:''}</td><td class="num">${fmtHours(calc.totalHours)}</td><td class="num">${fmtMoney(baseRate)}/hr</td><td class="num"><strong>${fmtMoney(calc.total)}</strong></td></tr>`;
     }
@@ -2583,6 +2619,7 @@ function doExportCombinedPDF(filteredEntries, itemList, periodLabel){
 }
 
 function doExportItemsExcel(itemList, periodLabel){
+  if(!xlsxReady()) return;
   const invNum=getInvoiceNum(); const fmt=settings.dateFormat;
   const wb=XLSX.utils.book_new();
   const infoData=[['INVOICE',invNum],['Date',fmtDate(todayISO(),fmt)],[],['Business Name',settings.businessName||''],['UTR',settings.abn||''],['Client',settings.clientName||''],['Tax Label',settings.taxLabel||'GST'],['Tax Rate',settings.taxRate?settings.taxRate+'%':'None']];
@@ -2603,6 +2640,7 @@ function doExportItemsExcel(itemList, periodLabel){
 }
 
 function doExportCombinedExcel(filteredEntries, itemList, periodLabel){
+  if(!xlsxReady()) return;
   const invNum=getInvoiceNum(); const fmt=settings.dateFormat;
   const wb=XLSX.utils.book_new();
   // Info sheet
@@ -2613,7 +2651,7 @@ function doExportCombinedExcel(filteredEntries, itemList, periodLabel){
     const tHeaders=['#','Description','Date','Start','End','Hours','Base Rate','Segment','Seg Hours','Seg Rate','Amount'];
     const tRows=[];
     filteredEntries.forEach((e,i)=>{
-      const calc=calcEntryTotal(e); const baseRate=parseFloat(e.rate||settings.rate||0);
+      const calc=calcEntryTotal(e); const baseRate=num(e.rate!==''&&e.rate!=null?e.rate:settings.rate);
       if(!calc.breakdown||calc.breakdown.length===0){
         tRows.push([i+1,e.description||'',fmtDate(e.startDate,fmt),e.startTime,e.endTime,parseFloat((calc.totalHours||0).toFixed(4)),baseRate,'Base',parseFloat((calc.totalHours||0).toFixed(4)),baseRate,parseFloat(calc.total.toFixed(2))]);
       } else {

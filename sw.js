@@ -1,4 +1,5 @@
-const CACHE = 'invoice-mgr-v9';
+const CACHE = 'invoice-mgr-v10';
+const XLSX_URL = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
 
 // On install — cache everything and immediately take over
 self.addEventListener('install', e => {
@@ -11,6 +12,15 @@ self.addEventListener('install', e => {
       '/icon-192.png',
       '/icon-512.png'
     ])).catch(() => {})
+  );
+  /* The spreadsheet library is fetched from a CDN, so without this the
+     three Excel exports are dead on a device that has never been online.
+     Cached in its own call: addAll rejects the whole batch if any one
+     entry fails, and a cross-origin miss must not take the app with it. */
+  e.waitUntil(
+    caches.open(CACHE)
+      .then(c => c.add(new Request(XLSX_URL, { mode: 'cors' })))
+      .catch(() => {})
   );
 });
 
