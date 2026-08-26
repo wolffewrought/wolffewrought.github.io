@@ -43,6 +43,23 @@
   .btn-dismiss { background: rgba(255,255,255,.15); color: #fff; border: 1px solid rgba(255,255,255,.3); border-radius: 8px; padding: 9px 14px; cursor: pointer; font-size: 13px; font-family: inherit; }
 
   /* iOS install tip */
+  /* filter bar */
+  #filter-bar { margin-bottom: 12px; }
+  .fchips { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+  .fchip {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 11px; border-radius: 999px; cursor: pointer;
+    font-size: 13px; font-weight: 600; font-family: inherit;
+    background: #fff; color: var(--navy); border: 1.5px solid var(--border);
+  }
+  .fchip.on { background: var(--navy); color: #fff; border-color: var(--navy); }
+  .fchip-n { font-size: 11px; font-weight: 700; padding: 1px 6px; border-radius: 999px; background: rgba(0,0,0,.08); }
+  .fchip.on .fchip-n { background: rgba(255,255,255,.22); }
+  .frow { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .fsel { padding: 7px 10px; border-radius: 8px; font-size: 13px; font-weight: 600; font-family: inherit; color: var(--navy); border: 1.5px solid var(--border); background: #fff; }
+  .fperiod { font-size: 13px; color: #64748b; flex: 1; min-width: 90px; }
+  .fbtn { font-size: 12px; padding: 6px 10px; white-space: nowrap; }
+
   #ios-tip {
     display: none; position: fixed; bottom: 0; left: 0; right: 0; z-index: 1000;
     background: var(--navy2); color: #fff; padding: 18px 20px; padding-bottom: calc(18px + var(--safe-bottom));
@@ -380,6 +397,7 @@
         <button class="btn-primary" onclick="addEntry()">+ Add Entry</button>
       </div>
     </div>
+    <div id="filter-bar"></div>
     <div id="entries-list"></div>
     <div id="entries-bottom-btn" style="display:none;text-align:center;padding:8px 0">
       <button class="btn-primary" onclick="addEntry()" style="width:100%">+ Add Entry</button>
@@ -509,6 +527,30 @@
       </div>
     </div>
 
+    <!-- Contracts -->
+    <div class="card blue-card">
+      <div class="card-title"><span class="icon">📁</span> Contracts</div>
+      <p style="font-size:13px;color:#64748b;margin-bottom:12px">Group entries by contract so you can tab between them. The number is that contract's pay period start day — leave it blank to use the global default below.</p>
+      <div id="contracts-list"></div>
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <input type="text" id="new-contract-input" placeholder="e.g. Northern Rail, Acme Ltd..." style="flex:1">
+        <input type="number" id="new-contract-day" min="1" max="28" inputmode="numeric" placeholder="day" style="width:70px;text-align:center">
+        <button class="btn-primary" onclick="addContract()" style="white-space:nowrap">+ Add</button>
+      </div>
+    </div>
+
+    <!-- Pay Period -->
+    <div class="card green-card">
+      <div class="card-title"><span class="icon">📆</span> Pay Period</div>
+      <p style="font-size:13px;color:#64748b;margin-bottom:12px">Which day of the month a pay period starts. 1 is an ordinary calendar month; 25 runs the 25th to the 24th. A contract can override this.</p>
+      <div class="form-group">
+        <label class="lbl">Period starts on day</label>
+        <input type="number" id="s-period-day" min="1" max="28" inputmode="numeric" placeholder="1"
+          onchange="saveSetting('periodStartDay',this.value);this.value=settings.periodStartDay;updatePeriodPreview();renderContracts();renderFilterBar();renderEntries();buildMonthTabs()">
+        <div class="date-fmt" id="s-period-preview"></div>
+      </div>
+    </div>
+
     <!-- Site Presets -->
     <div class="card blue-card">
       <div class="card-title"><span class="icon">📍</span> Site / Description Presets</div>
@@ -611,7 +653,10 @@
             <input type="time" id="exp-end-time" value="23:59" oninput="updatePreview()">
           </div>
         </div>
+        <div id="exp-contracts" style="margin-top:10px"></div>
         <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+          <button class="btn-secondary" onclick="setExportThisPeriod()">This Period</button>
+          <button class="btn-secondary" onclick="setExportLastPeriod()">Last Period</button>
           <button class="btn-secondary" onclick="setExportThisMonth()">This Month</button>
           <button class="btn-secondary" onclick="setExportLastMonth()">Last Month</button>
           <button class="btn-secondary" onclick="setExportThisYear()">This Year</button>
@@ -700,7 +745,8 @@
     <!-- Month tabs -->
     <div class="card" id="month-view-card">
       <div class="card-title"><span class="icon">📆</span> Browse by Month</div>
-      <div id="month-tabs" class="month-tabs"></div>
+      <div id="hist-contracts"></div>
+        <div id="month-tabs" class="month-tabs"></div>
       <div id="month-content"></div>
     </div>
 
@@ -1013,7 +1059,15 @@ let entries = [];
 let items = [];
 let invoiceCounter = 1;
 let customInvNum = ''; // user-editable override
-let sitePresets = [];   // [{id, name}]
+let sitePresets = [];
+/* Contracts are deliberately thin: a name, and optionally its own pay
+   period start day when it does not run to the same cycle as everything
+   else. Anything heavier belongs in Settings, which invoices already read. */
+let contracts = [];
+/* Which slice of the list is on screen. Persisted so reopening the app
+   puts you back where you were rather than in front of every entry ever. */
+let viewContract = '';
+let viewPeriod = 'current';   /* current | prev | all | archived */   // [{id, name}]
 let hoursPresets = [];  // [{id, label, startTime, endTime, nextDay}]
 
 // ══════════════════════════════════════════════════════
@@ -1026,6 +1080,8 @@ function saveAll(){
     localStorage.setItem('im_items', JSON.stringify(items));
     localStorage.setItem('im_counter', String(invoiceCounter));
     localStorage.setItem('im_sites', JSON.stringify(sitePresets));
+    localStorage.setItem('im_contracts', JSON.stringify(contracts));
+    localStorage.setItem('im_view', JSON.stringify({contract:viewContract, period:viewPeriod}));
     localStorage.setItem('im_hours', JSON.stringify(hoursPresets));
   } catch(e){}
 }
@@ -1038,15 +1094,31 @@ function loadAll(){
     const c=localStorage.getItem('im_counter');
     const si=localStorage.getItem('im_sites');
     const hp=localStorage.getItem('im_hours');
+    const co=localStorage.getItem('im_contracts');
+    const vw=localStorage.getItem('im_view');
     if(s) settings={...settings,...JSON.parse(s)};
     if(e) entries=JSON.parse(e);
     if(it) items=JSON.parse(it);
     if(c) invoiceCounter=parseInt(c)||1;
     if(si) sitePresets=JSON.parse(si);
     if(hp) hoursPresets=JSON.parse(hp);
+    if(co) contracts=JSON.parse(co);
+    if(vw){ const v=JSON.parse(vw); viewContract=v.contract||''; viewPeriod=v.period||'current'; }
   } catch(e){}
+  /* Entries written before contracts existed have neither field. Fill them
+     in once on load so nothing downstream has to keep asking. */
+  entries.forEach(e=>{ if(e.contractId===undefined) e.contractId=''; if(e.archived===undefined) e.archived=false; });
+  /* A contract that has been deleted must not strand its entries out of
+     every view - fall back to unassigned. */
+  const live=new Set(contracts.map(c=>c.id));
+  entries.forEach(e=>{ if(e.contractId && !live.has(e.contractId)) e.contractId=''; });
+  if(viewContract && !live.has(viewContract)) viewContract='';
   // Always enforce GBP — override any saved currency
   settings.currency = 'GBP';
+  /* A start day outside 1-28 would silently shift periods around short
+     months, so pin it on the way in rather than at every use. */
+  const psd=num(settings.periodStartDay);
+  settings.periodStartDay = psd>=1&&psd<=28 ? String(Math.floor(psd)) : '1';
   if(!settings.rate || settings.rate === '25.00') settings.rate = '13.50';
 }
 
@@ -1059,6 +1131,99 @@ function saveEntries(){ saveAll(); }
 //  HELPERS
 // ══════════════════════════════════════════════════════
 const pad = n => String(n).padStart(2,'0');
+
+/* ══════════════════════════════════════════════════════
+   PAY PERIODS
+
+   A period runs from startDay of one month to the day before startDay of
+   the next. startDay 1 is an ordinary calendar month, which is what every
+   existing entry assumes, so nothing changes until it is set otherwise.
+
+   All arithmetic is on local Y/M/D parts. new Date('2026-08-25') parses as
+   UTC and lands on the 24th west of Greenwich, which would put entries in
+   the wrong period for anyone in the Americas. */
+
+function daysInMonth(y,m){ return new Date(y,m,0).getDate(); }          /* m is 1-12 */
+function clampDay(y,m,d){ return Math.min(Math.max(1,d), daysInMonth(y,m)); }
+function addMonths(y,m,n){ const t=(y*12+(m-1))+n; return [Math.floor(t/12), (t%12)+1]; }
+function addDaysISO(iso,n){
+  const [y,m,d]=iso.split('-').map(Number);
+  const dt=new Date(y,m-1,d+n);
+  return `${dt.getFullYear()}-${pad(dt.getMonth()+1)}-${pad(dt.getDate())}`;
+}
+/* The start day a given entry answers to: its contract's own, or the
+   global default when the contract does not set one. */
+function periodStartDayFor(contractId){
+  const c=contractId&&contractId!=='__none' ? contracts.find(x=>x.id===contractId) : null;
+  if(c && c.periodStartDay) return clampDay(2026,1,num(c.periodStartDay));
+  return clampDay(2026,1,num(settings.periodStartDay)||1);
+}
+/* The period containing a date, as {start,end,key,label}. */
+function periodFor(dateISO, startDay){
+  const [Y,M,D]=dateISO.split('-').map(Number);
+  let sy=Y, sm=M;
+  if(D < clampDay(Y,M,startDay)){ [sy,sm]=addMonths(Y,M,-1); }
+  const start=`${sy}-${pad(sm)}-${pad(clampDay(sy,sm,startDay))}`;
+  const [ny,nm]=addMonths(sy,sm,1);
+  const end=addDaysISO(`${ny}-${pad(nm)}-${pad(clampDay(ny,nm,startDay))}`,-1);
+  return {start, end, key:start, label:periodLabel(start,end,startDay)};
+}
+function periodLabel(start,end,startDay){
+  const [sy,sm,sd]=start.split('-').map(Number);
+  if(startDay===1) return `${MONTH_NAMES[sm-1]} ${sy}`;
+  const [ey,em,ed]=end.split('-').map(Number);
+  const sameYear = sy===ey;
+  const a=`${sd} ${MONTH_NAMES[sm-1].slice(0,3)}${sameYear?'':' '+sy}`;
+  const b=`${ed} ${MONTH_NAMES[em-1].slice(0,3)} ${ey}`;
+  return `${a} – ${b}`;
+}
+/* Step back or forward whole periods from the one containing today. */
+function periodOffsetFrom(dateISO, startDay, n){
+  let pr=periodFor(dateISO,startDay);
+  for(let i=0;i<Math.abs(n);i++){
+    pr = n<0 ? periodFor(addDaysISO(pr.start,-1),startDay)
+             : periodFor(addDaysISO(pr.end,1),startDay);
+  }
+  return pr;
+}
+function entryInPeriod(e, pr){
+  const d=e.startDate; if(!d) return false;
+  return d>=pr.start && d<=pr.end;
+}
+
+/* ══════════════════════════════════════════════════════
+   VIEW FILTER
+   ══════════════════════════════════════════════════════ */
+function contractName(id){
+  const c=contracts.find(x=>x.id===id);
+  return c?c.name:'';
+}
+/* The entries the main list should show, given the contract and period
+   chosen in the filter bar. Archived entries are hidden everywhere except
+   the archived view - they are still in `entries` and still editable. */
+function visibleEntries(){
+  const startDay=periodStartDayFor(viewContract);
+  let pr=null;
+  if(viewPeriod==='current') pr=periodFor(todayISO(),startDay);
+  else if(viewPeriod==='prev') pr=periodOffsetFrom(todayISO(),startDay,-1);
+  return entries.filter(e=>{
+    if(viewPeriod==='archived'){ if(!e.archived) return false; }
+    else if(e.archived) return false;
+    /* '__none' is the Unassigned chip, not a contract id - matching it
+       against contractId directly would show nothing at all. */
+    if(viewContract==='__none'){ if(e.contractId) return false; }
+    else if(viewContract && (e.contractId||'')!==viewContract) return false;
+    if(pr && !entryInPeriod(e,pr)) return false;
+    return true;
+  });
+}
+function currentPeriodLabel(){
+  const startDay=periodStartDayFor(viewContract);
+  if(viewPeriod==='current') return periodFor(todayISO(),startDay).label;
+  if(viewPeriod==='prev') return periodOffsetFrom(todayISO(),startDay,-1).label;
+  if(viewPeriod==='archived') return 'Archived';
+  return 'All time';
+}
 function todayISO(){ const d=new Date(); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
 function parseDateTime(ds,ts){ const [y,m,d]=ds.split('-').map(Number); const [h,mi]=ts.split(':').map(Number); return new Date(y,m-1,d,h,mi); }
 function calcHours(sd,st,ed,et){ if(!sd||!st||!ed||!et) return null; const s=parseDateTime(sd,st),e=parseDateTime(ed,et); if(isNaN(s)||isNaN(e)) return null; const diff=(e-s)/3600000; return diff>0?diff:null; }
@@ -1091,7 +1256,7 @@ function fmtMoney(v){
   return `${c.symbol}${num(v).toFixed(dec)}`;
 }
 function uuid(){ return crypto.randomUUID(); }
-function newEntry(){ return {id:uuid(),startDate:todayISO(),startTime:'09:00',endDate:todayISO(),endTime:'17:00',description:'',rate:'',segments:[],hoursOverride:''}; }
+function newEntry(){ return {id:uuid(),startDate:todayISO(),startTime:'09:00',endDate:todayISO(),endTime:'17:00',description:'',rate:'',segments:[],hoursOverride:'',contractId:viewContract||'',archived:false}; }
 function newSegment(){ return {id:uuid(),startTime:'',endTime:'',endDate:'',multiplier:'1.5',label:'Time & Half'}; }
 /* Quotes matter as much as angle brackets: esc() output goes straight into
    value="..." attributes, so an unescaped " ends the attribute early and
@@ -1334,6 +1499,111 @@ function renderSitePresets(){
     </div>`).join('');
 }
 
+/* ══════════════════════════════════════════════════════
+   CONTRACTS
+   ══════════════════════════════════════════════════════ */
+function addContract(){
+  const inp=document.getElementById('new-contract-input');
+  const day=document.getElementById('new-contract-day');
+  const val=(inp?.value||'').trim();
+  if(!val){ alert('Give the contract a name first.'); return; }
+  if(contracts.some(c=>c.name.toLowerCase()===val.toLowerCase())){ alert('There is already a contract called that.'); return; }
+  const d=num(day?.value);
+  contracts.push({id:uuid(), name:val, periodStartDay: d>=1&&d<=28 ? d : null});
+  inp.value=''; if(day) day.value='';
+  saveAll(); renderContracts(); renderFilterBar(); renderEntries(); buildMonthTabs();
+}
+function removeContract(id){
+  const used=entries.filter(e=>e.contractId===id).length;
+  const name=contractName(id);
+  if(used && !confirm(`${used} ${used===1?'entry is':'entries are'} on "${name}". Deleting the contract keeps ${used===1?'it':'them'} but marks ${used===1?'it':'them'} unassigned. Continue?`)) return;
+  contracts=contracts.filter(c=>c.id!==id);
+  entries.forEach(e=>{ if(e.contractId===id) e.contractId=''; });
+  if(viewContract===id) viewContract='';
+  saveAll(); renderContracts(); renderFilterBar(); renderEntries(); buildMonthTabs();
+}
+function setContractDay(id,val){
+  const c=contracts.find(x=>x.id===id); if(!c) return;
+  const d=num(val);
+  c.periodStartDay = d>=1&&d<=28 ? d : null;
+  saveAll(); renderFilterBar(); renderEntries(); buildMonthTabs();
+}
+function renderContracts(){
+  const list=document.getElementById('contracts-list');
+  if(!list) return;
+  if(!contracts.length){ list.innerHTML='<p style="color:#94a3b8;font-size:13px">No contracts yet. Entries stay unassigned until you add one.</p>'; return; }
+  const gd=clampDay(2026,1,num(settings.periodStartDay)||1);
+  list.innerHTML=contracts.map(c=>{
+    const n=entries.filter(e=>e.contractId===c.id).length;
+    return `
+    <div class="preset-item">
+      <span class="preset-item-name">📁 ${esc(c.name)} <span style="color:#94a3b8;font-weight:400">· ${n} ${n===1?'entry':'entries'}</span></span>
+      <span style="display:flex;gap:6px;align-items:center">
+        <input type="number" min="1" max="28" inputmode="numeric" value="${c.periodStartDay||''}" placeholder="${gd}"
+          title="Pay period start day for this contract. Blank uses the global default."
+          onchange="setContractDay('${c.id}',this.value)"
+          style="width:58px;padding:4px 6px;font-size:13px;text-align:center">
+        <button class="btn-rm-preset" onclick="removeContract('${c.id}')" title="Remove">✕</button>
+      </span>
+    </div>`;}).join('');
+}
+
+/* ══════════════════════════════════════════════════════
+   FILTER BAR
+   ══════════════════════════════════════════════════════ */
+function setViewContract(id){ viewContract=id; saveAll(); renderFilterBar(); renderEntries(); }
+function setViewPeriod(v){ viewPeriod=v; saveAll(); renderFilterBar(); renderEntries(); }
+function renderFilterBar(){
+  const bar=document.getElementById('filter-bar');
+  if(!bar) return;
+  const counts=id=>entries.filter(e=>!e.archived&&(id===''||e.contractId===id)).length;
+  const chip=(id,label,n)=>`<button class="fchip${viewContract===id?' on':''}" onclick="setViewContract('${id}')">${esc(label)}<span class="fchip-n">${n}</span></button>`;
+  const unassigned=entries.filter(e=>!e.archived&&!e.contractId).length;
+  let chips=chip('','All',counts(''));
+  contracts.forEach(c=>{ chips+=chip(c.id,c.name,entries.filter(e=>!e.archived&&e.contractId===c.id).length); });
+  if(unassigned && contracts.length) chips+=`<button class="fchip${viewContract==='__none'?' on':''}" onclick="setViewContract('__none')">Unassigned<span class="fchip-n">${unassigned}</span></button>`;
+  const archived=entries.filter(e=>e.archived).length;
+  bar.innerHTML=`
+    <div class="fchips">${chips}</div>
+    <div class="frow">
+      <select class="fsel" onchange="setViewPeriod(this.value)">
+        <option value="current"${viewPeriod==='current'?' selected':''}>This period</option>
+        <option value="prev"${viewPeriod==='prev'?' selected':''}>Last period</option>
+        <option value="all"${viewPeriod==='all'?' selected':''}>All time</option>
+        <option value="archived"${viewPeriod==='archived'?' selected':''}>Archived${archived?` (${archived})`:''}</option>
+      </select>
+      <span class="fperiod">${esc(currentPeriodLabel())}</span>
+      ${viewPeriod==='archived'
+        ? `<button class="btn-secondary fbtn" onclick="unarchiveShown()">↩ Restore shown</button>`
+        : `<button class="btn-secondary fbtn" onclick="archiveShown()">📦 Archive shown</button>`}
+    </div>`;
+}
+
+/* ══════════════════════════════════════════════════════
+   ARCHIVING - a reversible hide. Entries stay in im_entries,
+   stay editable, and still count towards exports by date range.
+   ══════════════════════════════════════════════════════ */
+function toggleEntryArchived(id){
+  const e=entries.find(x=>x.id===id); if(!e) return;
+  e.archived=!e.archived;
+  saveAll(); renderFilterBar(); renderEntries();
+}
+function archiveShown(){
+  const shown=visibleEntries();
+  if(!shown.length){ alert('Nothing on screen to archive.'); return; }
+  if(!confirm(`Archive ${shown.length} ${shown.length===1?'entry':'entries'}? They stay editable under Archived and can be restored at any time.`)) return;
+  const ids=new Set(shown.map(e=>e.id));
+  entries.forEach(e=>{ if(ids.has(e.id)) e.archived=true; });
+  saveAll(); renderFilterBar(); renderEntries();
+}
+function unarchiveShown(){
+  const shown=visibleEntries();
+  if(!shown.length){ alert('Nothing on screen to restore.'); return; }
+  const ids=new Set(shown.map(e=>e.id));
+  entries.forEach(e=>{ if(ids.has(e.id)) e.archived=false; });
+  saveAll(); renderFilterBar(); renderEntries();
+}
+
 function addHoursPreset(){
   const label=(document.getElementById('new-hours-label')?.value||'').trim();
   const start=document.getElementById('new-hours-start')?.value||'';
@@ -1462,7 +1732,12 @@ function updateEntryChips(id){
 function renderEntries(){
   const list=document.getElementById('entries-list');
   list.innerHTML='';
-  entries.forEach((e,i)=>{
+  renderFilterBar();
+  const shown=visibleEntries();
+  if(!shown.length && entries.length){
+    list.innerHTML=`<div class="no-month-data">Nothing in this view.<br><span style="font-size:13px">${entries.filter(e=>e.archived).length&&viewPeriod!=='archived'?'Some entries are archived — switch the dropdown to Archived to see them.':'Try All time, or a different contract.'}</span></div>`;
+  }
+  shown.forEach((e,i)=>{
     const div=document.createElement('div');
     const mini=collapsedEntries.has(e.id);
     div.className='entry-card'+(mini?' minimised':'');
@@ -1471,7 +1746,7 @@ function renderEntries(){
     list.appendChild(div);
   });
   updateSummary();
-  document.getElementById('total-bar').style.display=entries.length?'flex':'none';
+  document.getElementById('total-bar').style.display=shown.length?'flex':'none';
   const clrBtn=document.getElementById('btn-clear-entries');
   if(clrBtn) clrBtn.style.display=entries.length?'inline-flex':'none';
   const togBtn=document.getElementById('btn-toggle-all');
@@ -1504,6 +1779,7 @@ function entryHTML(e,idx){
         </span>
         <div style="display:flex;gap:6px;align-items:center;flex-shrink:0">
           <button class="btn-toggle-mini" onclick="toggleEntryMini('${e.id}')">Expand ↓</button>
+          <button class="btn-toggle-mini" onclick="event.stopPropagation();toggleEntryArchived('${e.id}')" title="${e.archived?'Restore':'Archive'}">${e.archived?'↩':'📦'}</button>
           <button class="btn-remove" onclick="removeEntry('${e.id}')">✕</button>
         </div>
       </div>
@@ -1542,9 +1818,18 @@ function entryHTML(e,idx){
       <span class="entry-num" id="entry-lbl-${e.id}">ENTRY #${idx+1}${overnight?' 🌙 Overnight':''}</span>
       <div style="display:flex;gap:6px;align-items:center">
         <button class="btn-toggle-mini" onclick="toggleEntryMini('${e.id}')">Minimise ↑</button>
+        <button class="btn-toggle-mini" onclick="toggleEntryArchived('${e.id}')">${e.archived?'↩ Restore':'📦 Archive'}</button>
         <button class="btn-remove" onclick="removeEntry('${e.id}')">✕ Remove</button>
       </div>
     </div>
+    ${contracts.length?`
+    <div style="margin-bottom:10px">
+      <label class="lbl">Contract</label>
+      <select onchange="updateEntryField('${e.id}','contractId',this.value);renderFilterBar()">
+        <option value=""${!e.contractId?' selected':''}>— Unassigned —</option>
+        ${contracts.map(c=>`<option value="${c.id}"${e.contractId===c.id?' selected':''}>${esc(c.name)}</option>`).join('')}
+      </select>
+    </div>`:''}
     <div class="entry-grid">
       <div>
         <label class="lbl">Start Date</label>
@@ -1778,7 +2063,10 @@ function refreshAll(){
 }
 function updateSummary(){
   let totalH=0,totalM=0;
-  entries.forEach(e=>{
+  /* The bar sits under the list, so it has to total the list - totalling
+     every entry ever while showing one period reads as a bug. */
+  const scope=visibleEntries();
+  scope.forEach(e=>{
     const calc=calcEntryTotal(e);
     totalH+=calc.totalHours||0;
     totalM+=calc.total||0;
@@ -1798,6 +2086,42 @@ function clearExportDates(){
   const et=document.getElementById('exp-end-time'); if(et) et.value='23:59';
   updatePreview();
 }
+/* Fills the export range from the pay period rather than the calendar
+   month. Uses the export contract's own start day when one is chosen, so
+   a 25th-to-25th contract exports its own cycle. */
+function setExportPeriod(offset){
+  const startDay=periodStartDayFor(expContract);
+  const pr=offset===0?periodFor(todayISO(),startDay):periodOffsetFrom(todayISO(),startDay,offset);
+  document.getElementById('exp-start').value=pr.start;
+  document.getElementById('exp-end').value=pr.end;
+  const st=document.getElementById('exp-start-time'); if(st) st.value='00:00';
+  const et=document.getElementById('exp-end-time');   if(et) et.value='23:59';
+  updatePreview();
+}
+function setExportThisPeriod(){ setExportPeriod(0); }
+/* Shows what the chosen start day actually produces, so 25 is obviously
+   the 25th to the 24th and not a guess. */
+function updatePeriodPreview(){
+  const el=document.getElementById('s-period-preview');
+  if(!el) return;
+  const d=clampDay(2026,1,num(settings.periodStartDay)||1);
+  const pr=periodFor(todayISO(),d);
+  el.textContent = d===1 ? 'Calendar months — currently '+pr.label
+                         : 'Current period: '+pr.label;
+}
+function setExportLastPeriod(){ setExportPeriod(-1); }
+function setExportContract(id){ expContract=id; renderExportContracts(); updatePreview(); }
+function renderExportContracts(){
+  const bar=document.getElementById('exp-contracts');
+  if(!bar) return;
+  if(!contracts.length){ bar.innerHTML=''; return; }
+  const chip=(id,label)=>`<button class="fchip${expContract===id?' on':''}" onclick="setExportContract('${id}')">${esc(label)}</button>`;
+  let out=chip('','All contracts');
+  contracts.forEach(c=>{ out+=chip(c.id,c.name); });
+  if(entries.some(e=>!e.contractId)) out+=chip('__none','Unassigned');
+  bar.innerHTML=`<div class="fchips">${out}</div>`;
+}
+
 function setExportThisMonth(){
   const d=new Date();
   const y=d.getFullYear(), m=pad(d.getMonth()+1);
@@ -1974,6 +2298,10 @@ function getFilteredEntries(){
   const fromDT = s ? parseDateTime(s, st) : null;
   const toDT   = en ? parseDateTime(en, et) : null;
   return entries.filter(e=>{
+    /* Archived entries are hidden from the working list, not excluded from
+       invoicing - an archived January still has to be exportable. */
+    if(expContract==='__none'){ if(e.contractId) return false; }
+    else if(expContract && e.contractId!==expContract) return false;
     if(!e.startDate) return true;
     if(fromDT){
       const eStart=parseDateTime(e.startDate, e.startTime||'00:00');
@@ -2073,94 +2401,94 @@ function exportExcel(){
 const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 const MONTH_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
-let activeMonthKey = null; // "YYYY-MM"
+let activeMonthKey = null;   /* a pay period start date, ISO */
+let histContract = '';       /* history tab's own contract filter */
+let expContract  = '';       /* export tab's own contract filter */
+// "YYYY-MM"
 let historySearchActive = false;
 
 function buildMonthTabs(){
-  // Collect all unique YYYY-MM keys from entries
-  const monthMap = {}; // key -> {year, month, entries[]}
+  /* Groups by pay period rather than calendar month. With a start day of 1
+     a period is a calendar month, so this behaves exactly as before until
+     the setting is changed. Rewritten from a version that built the tab
+     list twice and then discarded the first pass. */
+  const startDay = periodStartDayFor(histContract);
+  const map = {};                       /* period start ISO -> {pr, entries[]} */
   entries.forEach(e=>{
     if(!e.startDate) return;
-    const [y,m] = e.startDate.split('-');
-    const key = `${y}-${m}`;
-    if(!monthMap[key]) monthMap[key]={year:parseInt(y),month:parseInt(m),entries:[]};
-    monthMap[key].entries.push(e);
+    if(histContract==='__none'){ if(e.contractId) return; }
+    else if(histContract && e.contractId!==histContract) return;
+    const pr = periodFor(e.startDate, startDay);
+    if(!map[pr.key]) map[pr.key] = {pr, entries:[]};
+    map[pr.key].entries.push(e);
   });
 
-  const keys = Object.keys(monthMap).sort().reverse(); // newest first
-
+  const keys = Object.keys(map).sort().reverse();     /* newest first */
   const container = document.getElementById('month-tabs');
+  if(!container) return;
+  renderHistContracts();
   container.innerHTML = '';
 
-  if(keys.length===0){
-    container.innerHTML='<p style="color:#94a3b8;font-size:13px">No entries yet. Add time entries to see monthly history.</p>';
-    document.getElementById('month-content').innerHTML='';
+  if(!keys.length){
+    container.innerHTML = `<p style="color:#94a3b8;font-size:13px">${entries.length?'No entries for this contract.':'No entries yet. Add time entries to see history.'}</p>`;
+    const c=document.getElementById('month-content'); if(c) c.innerHTML='';
     return;
   }
 
-  // Group by year for labels
+  if(!activeMonthKey || !map[activeMonthKey]){
+    const now = periodFor(todayISO(), startDay).key;
+    activeMonthKey = map[now] ? now : keys[0];
+  }
+
   let lastYear = null;
   keys.forEach(key=>{
-    const d = monthMap[key];
-    if(d.year !== lastYear){
+    const {pr, entries:ents} = map[key];
+    const year = Number(pr.start.split('-')[0]);
+    if(year !== lastYear){
       const lbl = document.createElement('div');
-      lbl.className='year-label'; lbl.textContent=d.year;
-      container.appendChild(lbl); lastYear=d.year;
+      lbl.className = 'year-label';
+      lbl.textContent = year;
+      container.appendChild(lbl);
+      lastYear = year;
     }
-    const totalH = d.entries.reduce((s,e)=>{ const h=calcHours(e.startDate,e.startTime,e.endDate,e.endTime); return s+(h||0); },0);
+    const totalH = ents.reduce((sum,e)=>sum+(calcHours(e.startDate,e.startTime,e.endDate,e.endTime)||0),0);
+    const sm = Number(pr.start.split('-')[1]);
+    const sd = Number(pr.start.split('-')[2]);
     const btn = document.createElement('button');
-    btn.className='month-tab'+(key===activeMonthKey?' active':'');
-    btn.innerHTML=`${MONTH_SHORT[d.month-1]}<small>${fmtHours(totalH)}</small>`;
-    btn.onclick=()=>{ activeMonthKey=key; buildMonthTabs(); renderMonthContent(key,monthMap[key].entries); };
+    btn.className = 'month-tab' + (key===activeMonthKey ? ' active' : '');
+    btn.dataset.key = key;
+    btn.title = pr.label;
+    btn.innerHTML = `${MONTH_SHORT[sm-1]}${startDay===1?'':' '+sd}<small>${fmtHours(totalH)}</small>`;
+    btn.onclick = () => { activeMonthKey = key; buildMonthTabs(); };
     container.appendChild(btn);
   });
 
-  // Auto-select current or first month
-  if(!activeMonthKey || !monthMap[activeMonthKey]){
-    const d=new Date(); activeMonthKey=`${d.getFullYear()}-${pad(d.getMonth()+1)}`;
-    if(!monthMap[activeMonthKey]) activeMonthKey=keys[0];
-  }
-  // Re-mark active
-  container.querySelectorAll('.month-tab').forEach(b=>b.classList.remove('active'));
-  keys.forEach((key,i)=>{
-    const btns=container.querySelectorAll('.month-tab');
-    // find matching btn by iterating
-    Array.from(btns).forEach(b=>{ if(b.textContent.startsWith(MONTH_SHORT[parseInt(key.split('-')[1])-1])){ /* could collide across years */ } });
-  });
-  // simpler: rebuild with data attribute
-  container.querySelectorAll('.month-tab').forEach(btn=>{
-    if(btn.dataset.key===activeMonthKey) btn.classList.add('active');
-  });
-
-  // Rebuild with data-key
-  container.innerHTML='';
-  lastYear=null;
-  keys.forEach(key=>{
-    const d=monthMap[key];
-    if(d.year!==lastYear){
-      const lbl=document.createElement('div');
-      lbl.className='year-label'; lbl.textContent=d.year;
-      container.appendChild(lbl); lastYear=d.year;
-    }
-    const totalH=d.entries.reduce((s,e)=>{ const h=calcHours(e.startDate,e.startTime,e.endDate,e.endTime); return s+(h||0); },0);
-    const btn=document.createElement('button');
-    btn.className='month-tab'+(key===activeMonthKey?' active':'');
-    btn.dataset.key=key;
-    btn.innerHTML=`${MONTH_SHORT[d.month-1]}<small>${fmtHours(totalH)}</small>`;
-    btn.onclick=()=>{ activeMonthKey=key; buildMonthTabs(); renderMonthContent(key,monthMap[key].entries); };
-    container.appendChild(btn);
-  });
-
-  renderMonthContent(activeMonthKey, monthMap[activeMonthKey]?.entries||[]);
+  const sel = map[activeMonthKey];
+  renderMonthContent(activeMonthKey, sel ? sel.entries : [], sel ? sel.pr.label : '');
 }
 
-function renderMonthContent(key, monthEntries){
+/* The history tab gets its own contract filter, independent of the main
+   list - looking back over one contract should not disturb what you were
+   working on. */
+function setHistContract(id){ histContract=id; activeMonthKey=null; buildMonthTabs(); }
+function renderHistContracts(){
+  const bar=document.getElementById('hist-contracts');
+  if(!bar) return;
+  if(!contracts.length){ bar.innerHTML=''; return; }
+  const chip=(id,label)=>`<button class="fchip${histContract===id?' on':''}" onclick="setHistContract('${id}')">${esc(label)}</button>`;
+  let out=chip('','All');
+  contracts.forEach(c=>{ out+=chip(c.id,c.name); });
+  if(entries.some(e=>!e.contractId)) out+=chip('__none','Unassigned');
+  bar.innerHTML=`<div class="fchips">${out}</div>`;
+}
+
+function renderMonthContent(key, monthEntries, label){
   const [y,m] = key.split('-');
   const content = document.getElementById('month-content');
   const sorted = [...monthEntries].sort((a,b)=>a.startDate.localeCompare(b.startDate)||a.startTime.localeCompare(b.startTime));
 
   if(sorted.length===0){
-    content.innerHTML=`<div class="no-month-data">No entries for ${MONTH_NAMES[parseInt(m)-1]} ${y}</div>`;
+    content.innerHTML=`<div class="no-month-data">No entries for ${esc(label||`${MONTH_NAMES[parseInt(m)-1]} ${y}`)}</div>`;
     return;
   }
 
@@ -2169,14 +2497,14 @@ function renderMonthContent(key, monthEntries){
 
   const rows = sorted.map(e=>{
     const h=calcHours(e.startDate,e.startTime,e.endDate,e.endTime);
-    const r=e.rate!==''?parseFloat(e.rate):parseFloat(settings.rate||0);
+    const r=num(e.rate!==''&&e.rate!=null?e.rate:settings.rate);
     const money=h!==null?h*r:0;
     totalH+=h||0; totalM+=money;
     const overnight=e.startDate!==e.endDate;
     return `<div class="month-entry-row">
       <div class="mer-left">
         <div class="mer-date">${fmtDate(e.startDate,fmt)}${overnight?` → ${fmtDate(e.endDate,fmt)}`:''}</div>
-        <div class="mer-desc">${e.description||'<span style="color:#94a3b8">No description</span>'}</div>
+        <div class="mer-desc">${e.description?esc(e.description):'<span style="color:#94a3b8">No description</span>'}</div>
         <div class="mer-time">${e.startTime} – ${e.endTime}${overnight?' <span class="mer-overnight">🌙 Overnight</span>':''}</div>
       </div>
       <div class="mer-right">
@@ -2685,6 +3013,11 @@ function doExportCombinedExcel(filteredEntries, itemList, periodLabel){
   renderInstallCard();
   renderSitePresets();
   renderHoursPresets();
+  renderContracts();
+  renderExportContracts();
+  buildMonthTabs();
+  const pd=document.getElementById('s-period-day'); if(pd) pd.value=settings.periodStartDay||'';
+  updatePeriodPreview();
   const tl=document.getElementById('tax-label'); if(tl) tl.value=settings.taxLabel||'';
   const tr=document.getElementById('tax-rate'); if(tr) tr.value=settings.taxRate||'';
   document.getElementById('date-preview').textContent=fmtDate(todayISO(),settings.dateFormat);
