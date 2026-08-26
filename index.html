@@ -2073,10 +2073,16 @@ function updateSummary(){
   });
   document.getElementById('pill-hours').textContent='⏱ '+fmtHours(totalH);
   document.getElementById('pill-total').textContent='💰 '+fmtMoney(totalM);
-  document.getElementById('total-label').textContent=`Total (${entries.length} entr${entries.length===1?'y':'ies'})`;
+  /* The bar totals what is on screen, so the count has to as well - a
+     count of every entry ever beside a filtered total reads as arithmetic
+     that does not add up. When a filter is hiding something, say so. */
+  const shownN=scope.length, allN=entries.length;
+  document.getElementById('total-label').textContent = shownN===allN
+    ? `Total (${allN} entr${allN===1?'y':'ies'})`
+    : `Total (${shownN} of ${allN} entries)`;
   document.getElementById('total-hours-bar').textContent=fmtHours(totalH);
   document.getElementById('total-money-bar').textContent=fmtMoney(totalM);
-  document.getElementById('total-bar').style.display=entries.length?'flex':'none';
+  document.getElementById('total-bar').style.display=scope.length?'flex':'none';
 }
 
 function clearExportDates(){
@@ -2303,14 +2309,16 @@ function getFilteredEntries(){
     if(expContract==='__none'){ if(e.contractId) return false; }
     else if(expContract && e.contractId!==expContract) return false;
     if(!e.startDate) return true;
-    if(fromDT){
-      const eStart=parseDateTime(e.startDate, e.startTime||'00:00');
-      if(eStart<fromDT) return false;
-    }
-    if(toDT){
-      const eEnd=parseDateTime(e.endDate||e.startDate, e.endTime||'23:59');
-      if(eEnd>toDT) return false;
-    }
+    /* A shift belongs to the day it started. The list, the History tabs
+       and the period grouping all place an entry by e.startDate, so the
+       export has to agree or the two disagree on every night shift.
+       Requiring the END inside the range as well silently dropped any
+       overnight crossing the closing boundary: on a 25th-to-25th period a
+       shift begun on the 25th ended on the 26th and fell out of that
+       invoice - and out of the next, which starts after it began. */
+    const eStart=parseDateTime(e.startDate, e.startTime||'00:00');
+    if(fromDT && eStart<fromDT) return false;
+    if(toDT   && eStart>toDT)   return false;
     return true;
   });
 }
@@ -2551,14 +2559,11 @@ function runHistorySearch(){
   const results = entries.filter(e=>{
     if(!e.startDate) return false;
     // Date/time filter
-    if(fromDT){
-      const eStart=parseDateTime(e.startDate, e.startTime||'00:00');
-      if(eStart<fromDT) return false;
-    }
-    if(toDT){
-      const eEnd=parseDateTime(e.endDate||e.startDate, e.endTime||'23:59');
-      if(eEnd>toDT) return false;
-    }
+    /* Same rule as the export, so a search and an invoice over the same
+       dates return the same work. */
+    const eStart=parseDateTime(e.startDate, e.startTime||'00:00');
+    if(fromDT && eStart<fromDT) return false;
+    if(toDT   && eStart>toDT)   return false;
     // Keyword filter
     if(keyword && !(e.description||'').toLowerCase().includes(keyword)) return false;
     return true;
