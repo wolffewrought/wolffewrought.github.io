@@ -654,6 +654,10 @@
           </div>
         </div>
         <div id="exp-contracts" style="margin-top:10px"></div>
+        <label style="display:flex;align-items:center;gap:8px;margin-top:10px;font-size:13px;color:#475569;cursor:pointer">
+          <input type="checkbox" id="exp-archived" onchange="setExportArchived(this.checked)" style="width:auto;margin:0">
+          Include archived entries
+        </label>
         <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
           <button class="btn-secondary" onclick="setExportThisPeriod()">This Period</button>
           <button class="btn-secondary" onclick="setExportLastPeriod()">Last Period</button>
@@ -676,6 +680,7 @@
         </div>
         <div class="preview-row"><span>Period</span><strong id="prev-period">—</strong></div>
         <div class="preview-row"><span>Entries in Range</span><strong id="prev-count">0</strong></div>
+        <div id="prev-note" style="display:none;padding:8px 12px;font-size:12.5px;color:#64748b;background:#fafbff;border-top:1px solid var(--border);line-height:1.5"></div>
         <div class="preview-row"><span>Total Hours</span><strong id="prev-hours">0h 00m</strong></div>
         <div class="preview-row grand"><span>Total Due</span><strong id="prev-total">£0.00</strong></div>
       </div>
@@ -1081,7 +1086,7 @@ function saveAll(){
     localStorage.setItem('im_counter', String(invoiceCounter));
     localStorage.setItem('im_sites', JSON.stringify(sitePresets));
     localStorage.setItem('im_contracts', JSON.stringify(contracts));
-    localStorage.setItem('im_view', JSON.stringify({contract:viewContract, period:viewPeriod}));
+    localStorage.setItem('im_view', JSON.stringify({contract:viewContract, period:viewPeriod, expArch:expIncludeArchived}));
     localStorage.setItem('im_hours', JSON.stringify(hoursPresets));
   } catch(e){}
 }
@@ -1103,7 +1108,7 @@ function loadAll(){
     if(si) sitePresets=JSON.parse(si);
     if(hp) hoursPresets=JSON.parse(hp);
     if(co) contracts=JSON.parse(co);
-    if(vw){ const v=JSON.parse(vw); viewContract=v.contract||''; viewPeriod=v.period||'current'; }
+    if(vw){ const v=JSON.parse(vw); viewContract=v.contract||''; viewPeriod=v.period||'current'; expIncludeArchived=!!v.expArch; }
   } catch(e){}
   /* Entries written before contracts existed have neither field. Fill them
      in once on load so nothing downstream has to keep asking. */
@@ -2117,6 +2122,31 @@ function updatePeriodPreview(){
 }
 function setExportLastPeriod(){ setExportPeriod(-1); }
 function setExportContract(id){ expContract=id; renderExportContracts(); updatePreview(); }
+function setExportArchived(on){ expIncludeArchived=!!on; saveAll(); updatePreview(); }
+/* Counts what the range would hold if nothing were filtered out, so the
+   preview can say plainly why its number differs from the list's. */
+function exportExclusions(){
+  const s=document.getElementById('exp-start')?.value;
+  const st=document.getElementById('exp-start-time')?.value||'00:00';
+  const en=document.getElementById('exp-end')?.value;
+  const et=document.getElementById('exp-end-time')?.value||'23:59';
+  const fromDT = s ? parseDateTime(s, st) : null;
+  const toDT   = en ? parseDateTime(en, et) : null;
+  const inRange = entries.filter(e=>{
+    if(!e.startDate) return true;
+    const eStart=parseDateTime(e.startDate, e.startTime||'00:00');
+    if(fromDT && eStart<fromDT) return false;
+    if(toDT   && eStart>toDT)   return false;
+    return true;
+  });
+  const archived = inRange.filter(e=>e.archived).length;
+  const otherContract = inRange.filter(e=>{
+    if(e.archived && !expIncludeArchived) return false;
+    if(expContract==='__none') return !!e.contractId;
+    return expContract && e.contractId!==expContract;
+  }).length;
+  return {archived, otherContract};
+}
 function renderExportContracts(){
   const bar=document.getElementById('exp-contracts');
   if(!bar) return;
@@ -2304,8 +2334,10 @@ function getFilteredEntries(){
   const fromDT = s ? parseDateTime(s, st) : null;
   const toDT   = en ? parseDateTime(en, et) : null;
   return entries.filter(e=>{
-    /* Archived entries are hidden from the working list, not excluded from
-       invoicing - an archived January still has to be exportable. */
+    /* Archived entries are excluded by default so the invoice matches the
+       list. Tick "include archived" to re-invoice an old period that has
+       since been tidied away - the preview always says which it did. */
+    if(e.archived && !expIncludeArchived) return false;
     if(expContract==='__none'){ if(e.contractId) return false; }
     else if(expContract && e.contractId!==expContract) return false;
     if(!e.startDate) return true;
@@ -2359,6 +2391,22 @@ function updatePreview(){
   const countEl=document.getElementById('prev-count');
   const hoursEl=document.getElementById('prev-hours');
   if(countEl) countEl.textContent=type==='items'?`${items.length} items`:type==='combined'?`${f.length} entries + ${items.length} items`:f.length;
+  /* Say out loud what the range holds but the invoice is leaving out. A
+     count that disagrees with the list and does not explain itself is
+     worse than no count at all. */
+  const noteEl=document.getElementById('prev-note');
+  if(noteEl){
+    if(type==='items'){ noteEl.style.display='none'; }
+    else {
+      const ex=exportExclusions();
+      const bits=[];
+      if(ex.archived && !expIncludeArchived) bits.push(`${ex.archived} archived ${ex.archived===1?'entry is':'entries are'} excluded — tick “Include archived” to invoice ${ex.archived===1?'it':'them'}`);
+      if(ex.archived && expIncludeArchived)  bits.push(`includes ${ex.archived} archived ${ex.archived===1?'entry':'entries'}`);
+      if(ex.otherContract) bits.push(`${ex.otherContract} ${ex.otherContract===1?'entry is':'entries are'} on another contract`);
+      noteEl.innerHTML = bits.length ? '⚠️ '+bits.map(esc).join('<br>⚠️ ') : '';
+      noteEl.style.display = bits.length ? 'block' : 'none';
+    }
+  }
   if(hoursEl) hoursEl.textContent=type==='items'?'—':fmtHours(totalH);
   document.getElementById('prev-period').textContent=type==='items'?fmtDate(todayISO(),fmt):getPeriodLabel();
   // Only auto-update invoice number if user hasn't typed a custom one
@@ -2412,6 +2460,10 @@ const MONTH_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct'
 let activeMonthKey = null;   /* a pay period start date, ISO */
 let histContract = '';       /* history tab's own contract filter */
 let expContract  = '';       /* export tab's own contract filter */
+/* Archived entries used to be invoiced silently while being hidden from
+   the list, so the two never agreed and nothing said why. Off by default:
+   the invoice should match what you can see. */
+let expIncludeArchived = false;
 // "YYYY-MM"
 let historySearchActive = false;
 
@@ -3022,6 +3074,7 @@ function doExportCombinedExcel(filteredEntries, itemList, periodLabel){
   renderExportContracts();
   buildMonthTabs();
   const pd=document.getElementById('s-period-day'); if(pd) pd.value=settings.periodStartDay||'';
+  const ea=document.getElementById('exp-archived'); if(ea) ea.checked=expIncludeArchived;
   updatePeriodPreview();
   const tl=document.getElementById('tax-label'); if(tl) tl.value=settings.taxLabel||'';
   const tr=document.getElementById('tax-rate'); if(tr) tr.value=settings.taxRate||'';
