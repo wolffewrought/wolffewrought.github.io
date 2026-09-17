@@ -387,6 +387,14 @@
   @media(max-width:600px) {
     .entry-grid { grid-template-columns:1fr 1fr; }
     .form-grid { grid-template-columns:1fr; }
+    /* Five native controls will not fit one row on a phone - the last two
+       were pushed past the card edge. Two per row, with the remove button
+       lifted into the corner so it does not take a row of its own. */
+    .segment-row { position:relative; padding-top:14px; }
+    .segment-grid { grid-template-columns:1fr 1fr; }
+    .segment-grid > div { min-width:0; }
+    .segment-grid input, .segment-grid select { width:100%; min-width:0; box-sizing:border-box; }
+    .segment-grid > div:last-child { position:absolute; top:6px; right:6px; padding:0 !important; }
     #app-header { padding-left:16px; padding-right:16px; }
     .month-tabs { gap:6px; }
     .month-tab { padding:6px 10px; font-size:12px; }
