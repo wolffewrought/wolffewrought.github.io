@@ -59,6 +59,73 @@
   .fsel { padding: 7px 10px; border-radius: 8px; font-size: 13px; font-weight: 600; font-family: inherit; color: var(--navy); border: 1.5px solid var(--border); background: #fff; }
   .fperiod { font-size: 13px; color: #64748b; flex: 1; min-width: 90px; }
   .fbtn { font-size: 12px; padding: 6px 10px; white-space: nowrap; }
+  .fdefault { font-size: 12px; color: #64748b; padding: 6px 2px 0; }
+  .fdefault strong { color: var(--navy); }
+  /* archive */
+  .fchips-sites { padding-left: 10px; border-left: 3px solid var(--border); margin-top: -4px; }
+  .fchip-site { font-size: 11.5px; }
+  .site-block { flex-basis: 100%; margin-top: 8px; padding: 8px 10px; background: #f8fafc; border: 1px dashed var(--border); border-radius: 8px; }
+  .site-pills { display: flex; flex-wrap: wrap; gap: 6px; }
+  .site-pill { display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; font-weight: 600; color: var(--navy);
+    background: #fff; border: 1.5px solid var(--border); border-radius: 999px; padding: 3px 4px 3px 9px; }
+  .site-pill-n { font-size: 10.5px; color: #64748b; font-weight: 700; }
+  .site-pill-x { border: none; background: #fee2e2; color: #b91c1c; border-radius: 999px; width: 18px; height: 18px; line-height: 18px;
+    font-size: 11px; cursor: pointer; padding: 0; font-family: inherit; }
+  .arch-contract { background: #fff; border: 1.5px solid var(--border); border-radius: 12px; padding: 12px; margin-bottom: 14px; }
+  .arch-contract-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; font-weight: 800; color: var(--navy); font-size: 15px; margin-bottom: 8px; }
+  .arch-tot { font-size: 12.5px; color: #64748b; font-weight: 600; white-space: nowrap; }
+  .arch-site-head { font-size: 12.5px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: .4px; margin: 10px 0 6px; }
+  .arch-period { border: 1.5px solid var(--border); border-radius: 10px; padding: 8px 10px; margin-bottom: 8px; background: #fafbff; }
+  .arch-period.is-archived { background: #f8fafc; border-style: dashed; }
+  .arch-period.is-archived .arch-period-label { color: #64748b; }
+  .arch-period-row { display: flex; align-items: flex-start; gap: 8px; }
+  .arch-expand { width: 26px; height: 26px; border-radius: 6px; border: 1.5px solid var(--border); background: #fff; color: var(--navy);
+    cursor: pointer; font-family: inherit; font-size: 13px; padding: 0; flex-shrink: 0; }
+  .arch-period-main { flex: 1; min-width: 0; }
+  .arch-period-label { font-weight: 700; color: var(--navy); font-size: 14px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .arch-period-sub { font-size: 12.5px; color: #64748b; margin-top: 2px; }
+  .arch-period-btns { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+  .arch-badge { font-size: 10.5px; font-weight: 700; padding: 2px 7px; border-radius: 999px; letter-spacing: .3px; }
+  .arch-badge-open { background: #dcfce7; color: #166534; }
+  .arch-badge-done { background: #e2e8f0; color: #475569; }
+  .arch-badge-part { background: #fef3c7; color: #92400e; }
+  .arch-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12.5px; }
+  .arch-table td { padding: 5px 6px; border-top: 1px solid var(--border); color: var(--navy); white-space: nowrap; }
+  .arch-table td.num { text-align: right; font-weight: 700; }
+  .arch-table tr.is-archived td { color: #94a3b8; }
+  /* calendar */
+  .calnav { display: inline-flex; align-items: center; gap: 4px; }
+  .calnav-btn { width: 32px; height: 32px; border-radius: 8px; border: 1.5px solid var(--border); background: #fff;
+    color: var(--navy); font-size: 18px; font-weight: 700; cursor: pointer; font-family: inherit; line-height: 1; }
+  .calnav-lbl { font-size: 14px; font-weight: 700; color: var(--navy); min-width: 118px; text-align: center; }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-bottom: 8px; }
+  .cal-wd { font-size: 11px; font-weight: 700; color: #94a3b8; text-align: center; text-transform: uppercase; letter-spacing: .4px; padding: 2px 0; }
+  .cal-cell { position: relative; aspect-ratio: 1 / 1.05; min-height: 44px; border-radius: 9px; border: 1.5px solid var(--border);
+    background: #fff; cursor: pointer; font-family: inherit; padding: 4px 3px; display: flex; flex-direction: column;
+    align-items: flex-start; justify-content: flex-start; color: var(--navy); }
+  .cal-cell.cal-pad { border: none; background: transparent; cursor: default; }
+  .cal-cell.cal-inperiod { background: #f4f6fb; }
+  .cal-cell.cal-has { background: #e8f1ff; border-color: #bcd3f5; }
+  .cal-cell.cal-has.cal-night { background: #ece8ff; border-color: #c9bff2; }
+  .cal-cell.cal-today .cal-d { background: var(--red); color: #fff; }
+  .cal-cell.cal-sel { outline: 2.5px solid var(--navy); outline-offset: -2px; }
+  .cal-d { font-size: 12px; font-weight: 700; width: 20px; height: 20px; line-height: 20px; text-align: center; border-radius: 999px; }
+  .cal-h { font-size: 10.5px; font-weight: 700; color: var(--navy); margin-top: auto; }
+  .cal-n { position: absolute; top: 4px; right: 4px; font-size: 9.5px; font-weight: 800; color: #fff; background: var(--navy);
+    border-radius: 999px; min-width: 15px; height: 15px; line-height: 15px; text-align: center; padding: 0 3px; }
+  .cal-legend { display: flex; flex-wrap: wrap; gap: 10px 14px; font-size: 11.5px; color: #64748b; align-items: center; margin-bottom: 12px; }
+  .cal-key { display: inline-block; width: 12px; height: 12px; border-radius: 3px; border: 1.5px solid var(--border); vertical-align: -2px; margin-right: 4px; }
+  .cal-key-has { background: #e8f1ff; border-color: #bcd3f5; }
+  .cal-key-night { background: #ece8ff; border-color: #c9bff2; }
+  .cal-key-period { background: #f4f6fb; }
+  .cal-month-total { margin-left: auto; font-weight: 700; color: var(--navy); }
+  .cal-hint { color: #94a3b8; font-size: 13px; text-align: center; padding: 14px 0; }
+  .cal-day-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 10px 12px; margin-bottom: 10px;
+    background: #fff; border: 1.5px solid var(--border); border-radius: 10px; font-size: 13px; color: #64748b; }
+  .cal-day-head strong { color: var(--navy); font-size: 14px; }
+  .cal-day-head button { margin-left: auto; }
+  .shift-warn { margin-top: 8px; padding: 7px 10px; border-radius: 8px; font-size: 12.5px; font-weight: 600;
+    color: #92400e; background: #fef3c7; border: 1px solid #fcd34d; }
 
   #ios-tip {
     display: none; position: fixed; bottom: 0; left: 0; right: 0; z-index: 1000;
@@ -376,10 +443,11 @@
 
 <!-- ── Nav ── -->
 <nav>
-  <button class="tab-btn active" onclick="switchTab('entries',this)">⏱ Time Entries</button>
-  <button class="tab-btn" onclick="switchTab('items',this)">🧾 Items</button>
+  <button class="tab-btn active" id="tabbtn-entries" onclick="switchTab('entries',this)">⏱ Time Entries</button>
+  <button class="tab-btn" onclick="switchTab('archive',this)">🗄 Archive</button>
+      <button class="tab-btn" onclick="switchTab('items',this)">🧾 Items</button>
   <button class="tab-btn" onclick="switchTab('settings',this)">⚙️ Settings</button>
-  <button class="tab-btn" onclick="switchTab('export',this)">📤 Export</button>
+  <button class="tab-btn" id="tabbtn-export" onclick="switchTab('export',this)">📤 Export</button>
   <button class="tab-btn" onclick="switchTab('history',this)">📅 History</button>
   <button class="tab-btn" onclick="switchTab('install',this)">📲 Install App</button>
 </nav>
@@ -394,19 +462,40 @@
         <span class="format-badge" id="fmt-badge">DD/MM/YYYY</span>
         <button class="btn-secondary" onclick="toggleAllEntries()" id="btn-toggle-all" style="display:none;font-size:12px;padding:6px 10px">Minimise All</button>
         <button class="btn-secondary" onclick="clearAllEntries()" id="btn-clear-entries" style="display:none;color:#ef4444;border-color:#fca5a5">🗑 Clear All</button>
+        <button class="btn-secondary" onclick="addEntryLike()" title="Copy the last entry's contract, site, description, rate and times onto the next day">⧉ Same as last</button>
         <button class="btn-primary" onclick="addEntry()">+ Add Entry</button>
       </div>
     </div>
     <div id="filter-bar"></div>
+    <div id="cal-view" style="display:none"></div>
     <div id="entries-list"></div>
     <div id="entries-bottom-btn" style="display:none;text-align:center;padding:8px 0">
-      <button class="btn-primary" onclick="addEntry()" style="width:100%">+ Add Entry</button>
+      <div style="display:flex;gap:8px">
+        <button class="btn-secondary" onclick="addEntryLike()" style="flex:1" title="Copy the last entry's contract, site, description, rate and times onto the next day">⧉ Same as last</button>
+        <button class="btn-primary" onclick="addEntry()" style="flex:1.4">+ Add Entry</button>
+      </div>
     </div>
     <div id="total-bar" style="display:none">
       <span id="total-label">Total (0 entries)</span>
       <span id="total-hours-bar">0h 00m</span>
       <span id="total-money-bar">$0.00</span>
     </div>
+  </div>
+
+  <!-- ══ ARCHIVE TAB ══ -->
+  <div id="tab-archive" class="tab-panel">
+    <div class="section-header">
+      <h2 class="section-title">🗄 Archive</h2>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:#475569;cursor:pointer">
+          <input type="checkbox" id="arch-only" onchange="setArchOnly(this.checked)" style="width:auto;margin:0">
+          Archived only
+        </label>
+      </div>
+    </div>
+    <p style="font-size:13px;color:#64748b;margin:-6px 0 12px">Every pay period, filed by contract and site. Open one to see it in the list, export its invoice, or archive it to clear it out of the working list.</p>
+    <div id="arch-filter"></div>
+    <div id="arch-tree"></div>
   </div>
 
   <!-- ══ ITEMS TAB ══ -->
@@ -1072,7 +1161,17 @@ let contracts = [];
 /* Which slice of the list is on screen. Persisted so reopening the app
    puts you back where you were rather than in front of every entry ever. */
 let viewContract = '';
-let viewPeriod = 'current';   /* current | prev | all | archived */   // [{id, name}]
+let viewPeriod = 'current';   /* current | prev | all | archived */
+let viewMode = 'list';        /* list | cal */
+let viewSite = '';            /* '' all sites | site id | '__none' */
+let viewRange = null;         /* {start,end,label} when viewPeriod==='custom' */
+let expSite  = '';
+let histSite = '';
+let archContract = '';        /* Archive tab's own contract chip */
+let archOnly = false;         /* Archive tab: archived periods only */
+const archOpen = new Set();   /* period rows expanded in the Archive tab */
+let calMonth = null;          /* 'YYYY-MM' the calendar is showing */
+let calDay = null;            /* 'YYYY-MM-DD' selected in the calendar */   // [{id, name}]
 let hoursPresets = [];  // [{id, label, startTime, endTime, nextDay}]
 
 // ══════════════════════════════════════════════════════
@@ -1086,7 +1185,7 @@ function saveAll(){
     localStorage.setItem('im_counter', String(invoiceCounter));
     localStorage.setItem('im_sites', JSON.stringify(sitePresets));
     localStorage.setItem('im_contracts', JSON.stringify(contracts));
-    localStorage.setItem('im_view', JSON.stringify({contract:viewContract, period:viewPeriod, expArch:expIncludeArchived}));
+    localStorage.setItem('im_view', JSON.stringify({contract:viewContract, site:viewSite, period:viewPeriod, range:viewRange, expArch:expIncludeArchived, expSite, mode:viewMode, archOnly}));
     localStorage.setItem('im_hours', JSON.stringify(hoursPresets));
   } catch(e){}
 }
@@ -1108,16 +1207,24 @@ function loadAll(){
     if(si) sitePresets=JSON.parse(si);
     if(hp) hoursPresets=JSON.parse(hp);
     if(co) contracts=JSON.parse(co);
-    if(vw){ const v=JSON.parse(vw); viewContract=v.contract||''; viewPeriod=v.period||'current'; expIncludeArchived=!!v.expArch; }
+    if(vw){ const v=JSON.parse(vw); viewContract=v.contract||''; viewSite=v.site||''; viewPeriod=v.period||'current'; viewRange=v.range||null; expIncludeArchived=!!v.expArch; expSite=v.expSite||''; viewMode=v.mode==='cal'?'cal':'list'; archOnly=!!v.archOnly; }
+    if(viewPeriod==='custom' && !(viewRange&&viewRange.start&&viewRange.end)) viewPeriod='current';
   } catch(e){}
   /* Entries written before contracts existed have neither field. Fill them
      in once on load so nothing downstream has to keep asking. */
-  entries.forEach(e=>{ if(e.contractId===undefined) e.contractId=''; if(e.archived===undefined) e.archived=false; });
+  entries.forEach(e=>{ if(e.contractId===undefined) e.contractId=''; if(e.archived===undefined) e.archived=false; if(e.siteId===undefined) e.siteId=''; });
+  contracts.forEach(c=>{ if(!Array.isArray(c.sites)) c.sites=[]; });
   /* A contract that has been deleted must not strand its entries out of
-     every view - fall back to unassigned. */
+     every view - fall back to unassigned. Same for a site: an entry whose
+     site no longer exists on its contract, or that has no contract at
+     all, is simply "no site". */
   const live=new Set(contracts.map(c=>c.id));
   entries.forEach(e=>{ if(e.contractId && !live.has(e.contractId)) e.contractId=''; });
-  if(viewContract && !live.has(viewContract)) viewContract='';
+  entries.forEach(e=>{ if(e.siteId && !contractSites(e.contractId).some(s=>s.id===e.siteId)) e.siteId=''; });
+  if(viewContract && viewContract!=='__none' && !live.has(viewContract)) viewContract='';
+  if(viewSite && viewSite!=='__none' && !contractSites(viewContract).some(s=>s.id===viewSite)) viewSite='';
+  if(expContract && expContract!=='__none' && !live.has(expContract)) expContract='';
+  if(expSite && expSite!=='__none' && !contractSites(expContract).some(s=>s.id===expSite)) expSite='';
   // Always enforce GBP — override any saved currency
   settings.currency = 'GBP';
   /* A start day outside 1-28 would silently shift periods around short
@@ -1203,21 +1310,71 @@ function contractName(id){
   const c=contracts.find(x=>x.id===id);
   return c?c.name:'';
 }
+/* Sites are sub-categories of a contract - the same employer's separate
+   depots, say. An entry with no contract cannot have a site. */
+function contractSites(cid){
+  if(!cid || cid==='__none') return [];
+  const c=contracts.find(x=>x.id===cid);
+  return (c && Array.isArray(c.sites)) ? c.sites : [];
+}
+function siteName(cid,sid){
+  const s=contractSites(cid).find(x=>x.id===sid);
+  return s?s.name:'';
+}
+/* One rule for "does this entry match a contract chip and a site chip",
+   used by the list, the calendar, History, Export and the Archive so they
+   can never drift apart. '__none' means unassigned / no site. */
+/* A second chip row for the sites of the selected contract. Rendered by
+   the list, Export and History alike so the three look and behave the same. */
+function siteChipsHTML(cid, current, setter, withCounts, pool){
+  const sites=contractSites(cid);
+  if(!sites.length) return '';
+  const src=pool||entries;
+  const cnt=sid=>src.filter(e=>matchesContractSite(e,cid,sid)).length;
+  const chip=(id,label)=>`<button class="fchip fchip-site${current===id?' on':''}" onclick="${setter}('${id}')">${esc(label)}${withCounts?`<span class="fchip-n">${cnt(id)}</span>`:''}</button>`;
+  let out=chip('','All sites');
+  sites.forEach(st=>{ out+=chip(st.id,st.name); });
+  if(src.some(e=>e.contractId===cid&&!effSite(e))) out+=chip('__none','No site');
+  return `<div class="fchips fchips-sites">${out}</div>`;
+}
+/* The site an entry effectively has: its siteId if that site exists on
+   its contract, otherwise none. A stale id must count as "no site" rather
+   than as a site no chip can select, or the entry would vanish from
+   every filtered view. */
+function effSite(e){
+  if(!e.contractId || !e.siteId) return '';
+  return contractSites(e.contractId).some(s=>s.id===e.siteId) ? e.siteId : '';
+}
+function matchesContractSite(e, cid, sid){
+  if(cid==='__none'){ if(e.contractId) return false; }
+  else if(cid && (e.contractId||'')!==cid) return false;
+  if(!cid || cid==='__none') return true;          /* site only means something inside a contract */
+  const es=effSite(e);
+  if(sid==='__none'){ if(es) return false; }
+  else if(sid && es!==sid) return false;
+  return true;
+}
 /* The entries the main list should show, given the contract and period
    chosen in the filter bar. Archived entries are hidden everywhere except
    the archived view - they are still in `entries` and still editable. */
 function visibleEntries(){
   const startDay=periodStartDayFor(viewContract);
   let pr=null;
-  if(viewPeriod==='current') pr=periodFor(todayISO(),startDay);
+  if(viewMode==='cal'){
+    /* What is on screen is what gets totalled: in calendar mode that is
+       the month being shown, not the pay period. */
+    const ym=calMonth||todayISO().slice(0,7);
+    pr={start:ym+'-01', end:ym+'-'+pad(daysInMonth(+ym.slice(0,4),+ym.slice(5,7)))};
+  }
+  else if(viewPeriod==='current') pr=periodFor(todayISO(),startDay);
   else if(viewPeriod==='prev') pr=periodOffsetFrom(todayISO(),startDay,-1);
+  else if(viewPeriod==='custom' && viewRange) pr={start:viewRange.start,end:viewRange.end};
   return entries.filter(e=>{
+    /* A period opened from the Archive is an explicit request to see that
+       period whole, archived entries and all. */
     if(viewPeriod==='archived'){ if(!e.archived) return false; }
-    else if(e.archived) return false;
-    /* '__none' is the Unassigned chip, not a contract id - matching it
-       against contractId directly would show nothing at all. */
-    if(viewContract==='__none'){ if(e.contractId) return false; }
-    else if(viewContract && (e.contractId||'')!==viewContract) return false;
+    else if(viewPeriod!=='custom' && e.archived) return false;
+    if(!matchesContractSite(e, viewContract, viewSite)) return false;
     if(pr && !entryInPeriod(e,pr)) return false;
     return true;
   });
@@ -1261,7 +1418,11 @@ function fmtMoney(v){
   return `${c.symbol}${num(v).toFixed(dec)}`;
 }
 function uuid(){ return crypto.randomUUID(); }
-function newEntry(){ return {id:uuid(),startDate:todayISO(),startTime:'09:00',endDate:todayISO(),endTime:'17:00',description:'',rate:'',segments:[],hoursOverride:'',contractId:viewContract||'',archived:false}; }
+function newEntry(){
+  const cid = (viewContract && viewContract!=='__none') ? viewContract : '';
+  const sid = (cid && viewSite && viewSite!=='__none') ? viewSite : '';
+  return {id:uuid(),startDate:todayISO(),startTime:'09:00',endDate:todayISO(),endTime:'17:00',description:'',rate:'',segments:[],hoursOverride:'',contractId:cid,siteId:sid,archived:false};
+}
 function newSegment(){ return {id:uuid(),startTime:'',endTime:'',endDate:'',multiplier:'1.5',label:'Time & Half'}; }
 /* Quotes matter as much as angle brackets: esc() output goes straight into
    value="..." attributes, so an unescaped " ends the attribute early and
@@ -1459,6 +1620,7 @@ function switchTab(id,btn){
   document.getElementById('tab-'+id).classList.add('active');
   if(btn) btn.classList.add('active');
   if(id==='export') updatePreview();
+  if(id==='archive') renderArchive();
   if(id==='history') buildMonthTabs();
   if(id==='install') renderInstallCard();
   if(id==='items') renderItems();
@@ -1518,14 +1680,39 @@ function addContract(){
   inp.value=''; if(day) day.value='';
   saveAll(); renderContracts(); renderFilterBar(); renderEntries(); buildMonthTabs();
 }
+function addSite(cid){
+  const c=contracts.find(x=>x.id===cid); if(!c) return;
+  const inp=document.getElementById('new-site-'+cid);
+  const val=(inp?.value||'').trim();
+  if(!val){ alert('Give the site a name first.'); return; }
+  if(!Array.isArray(c.sites)) c.sites=[];
+  if(c.sites.some(s=>s.name.toLowerCase()===val.toLowerCase())){ alert(`"${c.name}" already has a site called that.`); return; }
+  c.sites.push({id:uuid(), name:val});
+  if(inp) inp.value='';
+  saveAll(); renderContracts(); renderFilterBar(); renderEntries(); renderExportContracts(); buildMonthTabs();
+}
+function removeSite(cid,sid){
+  const c=contracts.find(x=>x.id===cid); if(!c) return;
+  const used=entries.filter(e=>e.contractId===cid&&e.siteId===sid).length;
+  const name=siteName(cid,sid);
+  if(used && !confirm(`${used} ${used===1?'entry is':'entries are'} at "${name}". Removing the site keeps ${used===1?'it':'them'} on the contract but with no site. Continue?`)) return;
+  c.sites=(c.sites||[]).filter(s=>s.id!==sid);
+  entries.forEach(e=>{ if(e.contractId===cid&&e.siteId===sid) e.siteId=''; });
+  if(viewSite===sid) viewSite=''; if(expSite===sid) expSite=''; if(histSite===sid) histSite='';
+  saveAll(); renderContracts(); renderFilterBar(); renderEntries(); renderExportContracts(); buildMonthTabs();
+}
 function removeContract(id){
   const used=entries.filter(e=>e.contractId===id).length;
   const name=contractName(id);
   if(used && !confirm(`${used} ${used===1?'entry is':'entries are'} on "${name}". Deleting the contract keeps ${used===1?'it':'them'} but marks ${used===1?'it':'them'} unassigned. Continue?`)) return;
   contracts=contracts.filter(c=>c.id!==id);
   entries.forEach(e=>{ if(e.contractId===id) e.contractId=''; });
-  if(viewContract===id) viewContract='';
-  saveAll(); renderContracts(); renderFilterBar(); renderEntries(); buildMonthTabs();
+  entries.forEach(e=>{ if(!e.contractId) e.siteId=''; });
+  if(viewContract===id){ viewContract=''; viewSite=''; }
+  if(expContract===id){ expContract=''; expSite=''; }
+  if(histContract===id){ histContract=''; histSite=''; }
+  if(archContract===id) archContract='';
+  saveAll(); renderContracts(); renderFilterBar(); renderEntries(); renderExportContracts(); buildMonthTabs();
 }
 function setContractDay(id,val){
   const c=contracts.find(x=>x.id===id); if(!c) return;
@@ -1540,8 +1727,13 @@ function renderContracts(){
   const gd=clampDay(2026,1,num(settings.periodStartDay)||1);
   list.innerHTML=contracts.map(c=>{
     const n=entries.filter(e=>e.contractId===c.id).length;
+    const sites=contractSites(c.id);
+    const sitePills=sites.map(st=>{
+      const k=entries.filter(e=>e.contractId===c.id&&e.siteId===st.id).length;
+      return `<span class="site-pill">📍 ${esc(st.name)}<span class="site-pill-n">${k}</span><button class="site-pill-x" onclick="removeSite('${c.id}','${st.id}')" title="Remove site">✕</button></span>`;
+    }).join('');
     return `
-    <div class="preset-item">
+    <div class="preset-item" style="flex-wrap:wrap">
       <span class="preset-item-name">📁 ${esc(c.name)} <span style="color:#94a3b8;font-weight:400">· ${n} ${n===1?'entry':'entries'}</span></span>
       <span style="display:flex;gap:6px;align-items:center">
         <input type="number" min="1" max="28" inputmode="numeric" value="${c.periodStartDay||''}" placeholder="${gd}"
@@ -1550,14 +1742,303 @@ function renderContracts(){
           style="width:58px;padding:4px 6px;font-size:13px;text-align:center">
         <button class="btn-rm-preset" onclick="removeContract('${c.id}')" title="Remove">✕</button>
       </span>
+      <div class="site-block">
+        <div class="site-pills">${sitePills||'<span style="color:#94a3b8;font-size:12px">No sites yet — add one to split this contract up.</span>'}</div>
+        <div style="display:flex;gap:6px;margin-top:6px">
+          <input type="text" id="new-site-${c.id}" placeholder="Add a site, e.g. North Depot" style="flex:1;padding:6px 8px;font-size:13px"
+            onkeydown="if(event.key==='Enter'){addSite('${c.id}')}">
+          <button class="btn-secondary fbtn" onclick="addSite('${c.id}')">+ Site</button>
+        </div>
+      </div>
     </div>`;}).join('');
+}
+
+/* ══════════════════════════════════════════════════════
+   ARCHIVE
+   The filing cabinet: every pay period there is an entry for, grouped
+   contract → site → period, newest first. Each period row is the unit
+   you invoice, archive and restore. Period boundaries come from the
+   contract's start day (or the global one), so a contract paid 26th to
+   25th files that way while another on calendar months files by month.
+   ══════════════════════════════════════════════════════ */
+function setArchOnly(on){ archOnly=!!on; saveAll(); renderArchive(); }
+function setArchContract(id){ archContract=id; renderArchive(); }
+/* Open the period in the Time Entries list: the same contract, site and
+   dates, archived entries included since this is that period on request. */
+function archViewPeriod(cid,sid,start,end,label){
+  viewContract = cid ? cid : (contracts.length ? '__none' : '');
+  viewSite = cid ? (sid ? sid : (contractSites(cid).length ? '__none' : '')) : '';
+  viewPeriod='custom'; viewRange={start,end,label}; viewMode='list';
+  saveAll();
+  switchTab('entries', document.getElementById('tabbtn-entries'));
+  renderEntries();
+  if(window.scrollTo) window.scrollTo({top:0, behavior:'smooth'});
+}
+/* Line the Export tab up on this period so the next tap is PDF or Excel. */
+function archExportPeriod(cid,sid,start,end){
+  expContract = cid ? cid : (contracts.length ? '__none' : '');
+  expSite = cid ? (sid ? sid : (contractSites(cid).length ? '__none' : '')) : '';
+  expIncludeArchived=true;
+  const ea=document.getElementById('exp-archived'); if(ea) ea.checked=true;
+  document.getElementById('exp-start').value=start;
+  document.getElementById('exp-end').value=end;
+  const st=document.getElementById('exp-start-time'); if(st) st.value='00:00';
+  const et=document.getElementById('exp-end-time');   if(et) et.value='23:59';
+  saveAll();
+  renderExportContracts();
+  switchTab('export', document.getElementById('tabbtn-export'));
+  updatePreview();
+  if(window.scrollTo) window.scrollTo({top:0, behavior:'smooth'});
+}
+function archSetPeriod(cid,sid,start,end,on){
+  archPeriodEntries(cid,sid,start,end).forEach(e=>{ e.archived=!!on; });
+  saveAll(); renderArchive(); renderEntries(); buildMonthTabs();
+}
+function archiveGroups(){
+  /* contract order: as listed in Settings, then Unassigned */
+  const buckets=[];
+  const cList=contracts.map(c=>({id:c.id,name:c.name}));
+  if(entries.some(e=>!e.contractId)) cList.push({id:'',name:'Unassigned'});
+  cList.forEach(c=>{
+    if(archContract && (archContract==='__none' ? c.id!=='' : c.id!==archContract)) return;
+    const cEntries=entries.filter(e=>(e.contractId||'')===c.id && e.startDate);
+    if(!cEntries.length) return;
+    const startDay=periodStartDayFor(c.id);
+    const sList=contractSites(c.id).map(st=>({id:st.id,name:st.name}));
+    if(cEntries.some(e=>!effSite(e))) sList.push({id:'',name: sList.length?'No site':''});
+    const sites=[];
+    sList.forEach(st=>{
+      const sEntries=cEntries.filter(e=>effSite(e)===st.id);
+      if(!sEntries.length) return;
+      const map={};
+      sEntries.forEach(e=>{
+        const pr=periodFor(e.startDate,startDay);
+        if(!map[pr.key]) map[pr.key]={start:pr.start,end:pr.end,label:pr.label,entries:[]};
+        map[pr.key].entries.push(e);
+      });
+      const periods=Object.keys(map).sort().reverse().map(k=>{
+        const g=map[k];
+        g.entries.sort((a,b)=>(a.startDate+a.startTime).localeCompare(b.startDate+b.startTime));
+        g.hours=g.entries.reduce((t,e)=>t+(calcEntryTotal(e).totalHours||0),0);
+        g.total=g.entries.reduce((t,e)=>t+(calcEntryTotal(e).total||0),0);
+        g.archived=g.entries.filter(e=>e.archived).length;
+        return g;
+      }).filter(g=>!archOnly || g.archived>0);
+      if(periods.length) sites.push({site:st, periods});
+    });
+    if(sites.length) buckets.push({contract:c, sites});
+  });
+  return buckets;
+}
+function renderArchive(){
+  const fbar=document.getElementById('arch-filter');
+  const tree=document.getElementById('arch-tree');
+  if(!tree) return;
+  const ao=document.getElementById('arch-only'); if(ao) ao.checked=archOnly;
+  if(fbar){
+    if(!contracts.length) fbar.innerHTML='';
+    else {
+      const chip=(id,label)=>`<button class="fchip${archContract===id?' on':''}" onclick="setArchContract('${id}')">${esc(label)}</button>`;
+      let out=chip('','All contracts');
+      contracts.forEach(c=>{ out+=chip(c.id,c.name); });
+      if(entries.some(e=>!e.contractId)) out+=chip('__none','Unassigned');
+      fbar.innerHTML=`<div class="fchips" style="margin-bottom:12px">${out}</div>`;
+    }
+  }
+  const groups=archiveGroups();
+  if(!groups.length){
+    tree.innerHTML=`<p style="color:#94a3b8;font-size:13px;text-align:center;padding:24px 0">${
+      archOnly ? 'Nothing archived yet. Archive a period below, or from the 📦 button on any entry.' :
+      entries.length ? 'No entries for this contract.' : 'No entries yet. Add time entries and they will be filed here by pay period.'}</p>`;
+    return;
+  }
+  const rowKey=(c,st,pr)=>`${c.id}|${st.id}|${pr.start}`;
+  const q=v=>String(v).replace(/'/g,"\\'");
+  tree.innerHTML=groups.map(g=>{
+    const cid=g.contract.id;
+    const cTot=g.sites.reduce((t,s)=>t+s.periods.reduce((u,p)=>u+p.total,0),0);
+    const cHrs=g.sites.reduce((t,s)=>t+s.periods.reduce((u,p)=>u+p.hours,0),0);
+    return `
+    <div class="arch-contract">
+      <div class="arch-contract-head">
+        <span>📁 ${esc(g.contract.name)}</span>
+        <span class="arch-tot">${fmtHours(cHrs)} · ${fmtMoney(cTot)}</span>
+      </div>
+      ${g.sites.map(sg=>{
+        const sid=sg.site.id;
+        return `
+        ${sg.site.name?`<div class="arch-site-head">📍 ${esc(sg.site.name)}</div>`:''}
+        ${sg.periods.map(pr=>{
+          const key=rowKey(g.contract,sg.site,pr);
+          const open=archOpen.has(key);
+          const all=pr.archived===pr.entries.length;
+          const status=all?'<span class="arch-badge arch-badge-done">📦 Archived</span>':pr.archived?`<span class="arch-badge arch-badge-part">📦 ${pr.archived} of ${pr.entries.length}</span>`:'<span class="arch-badge arch-badge-open">Open</span>';
+          const args=`'${q(cid)}','${q(sid)}','${pr.start}','${pr.end}'`;
+          return `
+          <div class="arch-period${all?' is-archived':''}">
+            <div class="arch-period-row">
+              <button class="arch-expand" onclick="archToggleOpen('${q(key)}')" aria-label="${open?'Collapse':'Expand'}">${open?'▾':'▸'}</button>
+              <div class="arch-period-main">
+                <div class="arch-period-label">${esc(pr.label)} ${status}</div>
+                <div class="arch-period-sub">${pr.entries.length} ${pr.entries.length===1?'entry':'entries'} · ${fmtHours(pr.hours)} · <strong>${fmtMoney(pr.total)}</strong></div>
+              </div>
+            </div>
+            <div class="arch-period-btns">
+              <button class="btn-secondary fbtn" onclick="archViewPeriod(${args},'${q(pr.label)}')">👁 View</button>
+              <button class="btn-secondary fbtn" onclick="archExportPeriod(${args})">📤 Export</button>
+              ${all
+                ? `<button class="btn-secondary fbtn" onclick="archSetPeriod(${args},false)">↩ Restore</button>`
+                : `<button class="btn-secondary fbtn" onclick="archSetPeriod(${args},true)">📦 Archive${pr.archived?' rest':''}</button>`}
+            </div>
+            ${open?`
+            <table class="arch-table">
+              ${pr.entries.map(e=>`<tr class="${e.archived?'is-archived':''}">
+                <td>${fmtDate(e.startDate,settings.dateFormat)}${e.endDate&&e.endDate!==e.startDate?' 🌙':''}</td>
+                <td>${esc(e.startTime||'')}–${esc(e.endTime||'')}</td>
+                <td>${fmtHours(calcEntryTotal(e).totalHours)}</td>
+                <td class="num">${fmtMoney(calcEntryTotal(e).total)}</td>
+                <td>${e.archived?'📦':''}</td>
+              </tr>`).join('')}
+            </table>`:''}
+          </div>`;
+        }).join('')}`;
+      }).join('')}
+    </div>`;
+  }).join('');
+}
+function archToggleOpen(key){ if(archOpen.has(key)) archOpen.delete(key); else archOpen.add(key); renderArchive(); }
+function archPeriodEntries(cid,sid,start,end){
+  return entries.filter(e=>(e.contractId||'')===cid && effSite(e)===sid && e.startDate && e.startDate>=start && e.startDate<=end);
+}
+
+/* ══════════════════════════════════════════════════════
+   CALENDAR
+   A month grid over the same entries the list shows. Tap a day to see its
+   entries as ordinary editable cards beneath the grid, or to add one on
+   that date. Entries are placed by start date, the same rule as everywhere
+   else, so a night shift sits on the evening it began.
+   ══════════════════════════════════════════════════════ */
+function setViewMode(m){
+  viewMode = m==='cal' ? 'cal' : 'list';
+  if(viewMode==='cal' && !calMonth) calMonth=todayISO().slice(0,7);
+  saveAll(); renderEntries();
+}
+function calShift(n){
+  if(n===0){ calMonth=todayISO().slice(0,7); calDay=todayISO(); }
+  else {
+    const [y,m]=(calMonth||todayISO().slice(0,7)).split('-').map(Number);
+    const [ny,nm]=addMonths(y,m,n);
+    calMonth=`${ny}-${pad(nm)}`; calDay=null;
+  }
+  renderEntries();
+}
+/* The entries the calendar may show: the list's contract chip and archive
+   rule apply, the period dropdown does not - the month nav replaces it. */
+function calEntries(){
+  return entries.filter(e=>{
+    if(viewPeriod==='archived'){ if(!e.archived) return false; }
+    else if(viewPeriod!=='custom' && e.archived) return false;
+    if(!matchesContractSite(e, viewContract, viewSite)) return false;
+    return !!e.startDate;
+  });
+}
+function renderCalendar(){
+  const el=document.getElementById('cal-view');
+  if(!el) return;
+  const ym=calMonth||todayISO().slice(0,7);
+  const [y,m]=ym.split('-').map(Number);
+  const nDays=daysInMonth(y,m);
+  const first=new Date(y,m-1,1).getDay();            /* 0=Sun */
+  const lead=(first+6)%7;                             /* Monday-first */
+  const today=todayISO();
+  const byDay={};
+  calEntries().forEach(e=>{ (byDay[e.startDate]=byDay[e.startDate]||[]).push(e); });
+  /* shade the days inside the current pay period so the cycle reads at a glance */
+  const pr=periodFor(today, periodStartDayFor(viewContract));
+
+  let cells='';
+  for(let i=0;i<lead;i++) cells+='<div class="cal-cell cal-pad"></div>';
+  for(let d=1; d<=nDays; d++){
+    const iso=`${ym}-${pad(d)}`;
+    const list=byDay[iso]||[];
+    const hrs=list.reduce((t,e)=>t+(calcEntryTotal(e).totalHours||0),0);
+    const cls=['cal-cell'];
+    if(iso===today) cls.push('cal-today');
+    if(iso===calDay) cls.push('cal-sel');
+    if(list.length) cls.push('cal-has');
+    if(iso>=pr.start && iso<=pr.end) cls.push('cal-inperiod');
+    if(list.some(e=>e.startDate!==e.endDate)) cls.push('cal-night');
+    cells+=`<button class="${cls.join(' ')}" onclick="calSelect('${iso}')" aria-label="${iso}">
+      <span class="cal-d">${d}</span>
+      ${list.length?`<span class="cal-h">${fmtHours(hrs).replace(' 00m','')}</span><span class="cal-n">${list.length}</span>`:''}
+    </button>`;
+  }
+  const monthList=Object.keys(byDay).filter(k=>k.startsWith(ym)).reduce((a,k)=>a.concat(byDay[k]),[]);
+  const mH=monthList.reduce((t,e)=>t+(calcEntryTotal(e).totalHours||0),0);
+  const mM=monthList.reduce((t,e)=>t+(calcEntryTotal(e).total||0),0);
+
+  el.innerHTML=`
+    <div class="cal-grid">
+      ${['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(w=>`<div class="cal-wd">${w}</div>`).join('')}
+      ${cells}
+    </div>
+    <div class="cal-legend">
+      <span><i class="cal-key cal-key-has"></i> worked</span>
+      <span><i class="cal-key cal-key-night"></i> overnight</span>
+      <span><i class="cal-key cal-key-period"></i> this pay period</span>
+      <span class="cal-month-total">${monthList.length} ${monthList.length===1?'entry':'entries'} · ${fmtHours(mH)} · ${fmtMoney(mM)}</span>
+    </div>
+    <div id="cal-day"></div>`;
+  renderCalDay();
+}
+function calSelect(iso){
+  calDay = (calDay===iso) ? null : iso;
+  renderCalendar();
+}
+function renderCalDay(){
+  const host=document.getElementById('cal-day');
+  if(!host) return;
+  if(!calDay){ host.innerHTML='<p class="cal-hint">Tap a day to see or add entries.</p>'; return; }
+  const list=calEntries().filter(e=>e.startDate===calDay);
+  const [y,m,d]=calDay.split('-').map(Number);
+  const wd=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][new Date(y,m-1,d).getDay()];
+  const hrs=list.reduce((t,e)=>t+(calcEntryTotal(e).totalHours||0),0);
+  host.innerHTML=`
+    <div class="cal-day-head">
+      <strong>${wd} ${d} ${MONTH_NAMES[m-1]} ${y}</strong>
+      <span>${list.length?`${list.length} ${list.length===1?'entry':'entries'} · ${fmtHours(hrs)}`:'No entries'}</span>
+      <button class="btn-primary fbtn" onclick="addEntryOn('${calDay}')">+ Add entry</button>
+    </div>
+    <div id="cal-day-list"></div>`;
+  const wrap=document.getElementById('cal-day-list');
+  list.forEach(e=>{
+    const div=document.createElement('div');
+    const mini=collapsedEntries.has(e.id);
+    div.className='entry-card'+(mini?' minimised':'');
+    div.id='entry-'+e.id;
+    div.innerHTML=entryHTML(e, entries.indexOf(e));
+    wrap.appendChild(div);
+  });
+}
+/* Add an entry on a given day, opened for editing right there under the
+   calendar. Inherits the filtered contract like any other new entry. */
+function addEntryOn(iso){
+  const e=newEntry();
+  e.startDate=iso; e.endDate=iso;
+  entries.push(e);
+  collapsedEntries.delete(e.id);
+  calDay=iso; calMonth=iso.slice(0,7);
+  saveAll(); renderEntries();
+  const card=document.getElementById('entry-'+e.id);
+  if(card && card.scrollIntoView) card.scrollIntoView({behavior:'smooth', block:'center'});
 }
 
 /* ══════════════════════════════════════════════════════
    FILTER BAR
    ══════════════════════════════════════════════════════ */
-function setViewContract(id){ viewContract=id; saveAll(); renderFilterBar(); renderEntries(); }
-function setViewPeriod(v){ viewPeriod=v; saveAll(); renderFilterBar(); renderEntries(); }
+function setViewContract(id){ viewContract=id; viewSite=''; saveAll(); renderFilterBar(); renderEntries(); }
+function setViewSite(id){ viewSite=id; saveAll(); renderFilterBar(); renderEntries(); }
+function setViewPeriod(v){ viewPeriod=v; if(v!=='custom') viewRange=null; saveAll(); renderFilterBar(); renderEntries(); }
 function renderFilterBar(){
   const bar=document.getElementById('filter-bar');
   if(!bar) return;
@@ -1568,20 +2049,35 @@ function renderFilterBar(){
   contracts.forEach(c=>{ chips+=chip(c.id,c.name,entries.filter(e=>!e.archived&&e.contractId===c.id).length); });
   if(unassigned && contracts.length) chips+=`<button class="fchip${viewContract==='__none'?' on':''}" onclick="setViewContract('__none')">Unassigned<span class="fchip-n">${unassigned}</span></button>`;
   const archived=entries.filter(e=>e.archived).length;
+  const cal=viewMode==='cal';
+  const ym=calMonth||todayISO().slice(0,7);
+  const [cy,cm]=ym.split('-').map(Number);
+  const siteRow=siteChipsHTML(viewContract, viewSite, 'setViewSite', true, entries.filter(e=>!e.archived));
   bar.innerHTML=`
     <div class="fchips">${chips}</div>
+    ${siteRow}
     <div class="frow">
+      ${cal ? `
+      <span class="calnav">
+        <button class="calnav-btn" onclick="calShift(-1)" aria-label="Previous month">‹</button>
+        <span class="calnav-lbl">${MONTH_NAMES[cm-1]} ${cy}</span>
+        <button class="calnav-btn" onclick="calShift(1)" aria-label="Next month">›</button>
+      </span>
+      <button class="btn-secondary fbtn" onclick="calShift(0)">Today</button>` : `
       <select class="fsel" onchange="setViewPeriod(this.value)">
+        ${viewPeriod==='custom'&&viewRange?`<option value="custom" selected>${esc(viewRange.label||'Selected period')}</option>`:''}
         <option value="current"${viewPeriod==='current'?' selected':''}>This period</option>
         <option value="prev"${viewPeriod==='prev'?' selected':''}>Last period</option>
         <option value="all"${viewPeriod==='all'?' selected':''}>All time</option>
         <option value="archived"${viewPeriod==='archived'?' selected':''}>Archived${archived?` (${archived})`:''}</option>
       </select>
-      <span class="fperiod">${esc(currentPeriodLabel())}</span>
+      <span class="fperiod">${esc(currentPeriodLabel())}</span>`}
+      <button class="btn-secondary fbtn" onclick="setViewMode('${cal?'list':'cal'}')" title="${cal?'Show as a list':'Show as a calendar'}">${cal?'☰ List':'📅 Calendar'}</button>
       ${viewPeriod==='archived'
         ? `<button class="btn-secondary fbtn" onclick="unarchiveShown()">↩ Restore shown</button>`
         : `<button class="btn-secondary fbtn" onclick="archiveShown()">📦 Archive shown</button>`}
-    </div>`;
+    </div>
+    ${newEntryHint()?`<div class="fdefault">${newEntryHint()}</div>`:''}`;
 }
 
 /* ══════════════════════════════════════════════════════
@@ -1697,15 +2193,102 @@ function toggleAllEntries(){
   else { entries.forEach(e=>collapsedEntries.add(e.id)); }
   renderEntries();
 }
-function addEntry(){ entries.push(newEntry()); renderEntries(); saveAll(); }
+/* Changing the contract changes which sites are valid, and whether the
+   Site select exists at all - so this one field re-renders its card. */
+function setEntryContract(id,val){
+  const e=entries.find(x=>x.id===id); if(!e) return;
+  e.contractId=val||'';
+  if(!contractSites(e.contractId).some(s=>s.id===e.siteId)) e.siteId='';
+  saveAll();
+  const card=document.getElementById('entry-'+id);
+  if(card){ card.innerHTML=entryHTML(e, entries.indexOf(e)); }
+  renderFilterBar(); updateSummary();
+}
+/* Twenty shifts at the same site should not mean twenty rounds of the same
+   picks. Copy the last entry on screen - contract, site, description, rate
+   and times - onto the next day, and let the overnight rule set the end
+   date from the times rather than copying a span that might be wrong (a
+   six-day end date would otherwise breed six-day end dates). The hours
+   override and rate segments are deliberately not copied: both are
+   per-shift corrections, and a copied one bills silently. */
+function addEntryLike(){
+  const pool=visibleEntries();
+  const src=pool.length ? pool[pool.length-1] : (entries.length ? entries[entries.length-1] : null);
+  if(!src){ addEntry(); return; }
+  const e=newEntry();
+  e.contractId=src.contractId||''; e.siteId=effSite(src);
+  e.description=src.description||''; e.rate=src.rate||'';
+  e.startTime=src.startTime||'09:00'; e.endTime=src.endTime||'17:00';
+  e.startDate=(viewMode==='cal' && calDay) ? calDay : (src.startDate ? addDaysISO(src.startDate,1) : todayISO());
+  e.endDate=e.startDate;
+  autoAdvanceEndDate(e);
+  entries.push(e);
+  collapsedEntries.delete(e.id);
+  if(viewMode==='cal'){ calDay=e.startDate; calMonth=e.startDate.slice(0,7); }
+  saveAll(); renderEntries();
+  const card=document.getElementById('entry-'+e.id);
+  if(card && card.scrollIntoView) card.scrollIntoView({behavior:'smooth', block:'center'});
+}
+/* One line that says where a new entry will go, so the inheritance from
+   the chips above is a visible promise rather than a surprise. */
+function newEntryHint(){
+  const cid=(viewContract && viewContract!=='__none') ? viewContract : '';
+  if(!contracts.length) return '';
+  if(!cid) return 'New entries are unassigned — pick a contract chip above to set a default.';
+  const sid=(viewSite && viewSite!=='__none') ? viewSite : '';
+  const where=contractName(cid)+(sid?' › '+siteName(cid,sid):(contractSites(cid).length?' › no site':''));
+  return `New entries go to <strong>${esc(where)}</strong>`;
+}
+function addEntry(){
+  /* In calendar mode a bare add would land on today's cell, possibly off
+     screen and on an unselected day - put it on the day being looked at. */
+  if(viewMode==='cal'){ addEntryOn(calDay||todayISO()); return; }
+  entries.push(newEntry()); renderEntries(); saveAll();
+}
 function updateEntryField(id, field, val){
   const e = entries.find(x => x.id === id);
   if(!e) return;
   e[field] = val;
+  if(['startTime','endTime','startDate','endDate'].includes(field)) autoAdvanceEndDate(e);
+  /* Moving an entry to another day in calendar mode: follow it, so the
+     card does not vanish from under the person editing it. */
+  if(viewMode==='cal' && field==='startDate' && val){
+    saveAll(); calDay=val; calMonth=val.slice(0,7); renderEntries(); return;
+  }
   // Update only the calculated chips and date previews — never re-render inputs
   updateEntryChips(id);
   updateSummary();
   saveAll();
+}
+
+/* An end time earlier than the start time on the same date is not a
+   negative shift, it is tomorrow. calcHours returned null for it, so
+   18:00-05:00 showed 0h until the end date was bumped by hand. Advance it
+   automatically - and only when the end date is the start date or blank,
+   so a date the person set on purpose is never touched. It only ever
+   moves forward: if a later edit makes the span implausible the card
+   warns rather than silently pulling the date back. */
+function autoAdvanceEndDate(e){
+  if(!e.startDate||!e.startTime||!e.endTime) return false;
+  if(e.endDate && e.endDate!==e.startDate) return false;
+  if(e.endTime > e.startTime) { if(!e.endDate) e.endDate=e.startDate; return false; }
+  e.endDate = addDaysISO(e.startDate, 1);
+  const inp=document.getElementById('ed-'+e.id);
+  if(inp) inp.value=e.endDate;
+  return true;
+}
+/* A shift is rarely longer than a day. Past 24h the end date is almost
+   always wrong - an auto-advanced date left behind, or a mis-tap in the
+   picker - and a silent 158h line is exactly what should never reach an
+   invoice unnoticed. */
+function shiftWarning(e){
+  const h=calcHours(e.startDate,e.startTime,e.endDate,e.endTime);
+  if(h===null) return '';
+  if(h>24){
+    const days=Math.round(h/24*10)/10;
+    return `⚠️ ${fmtHours(h)} — over ${days} days, check the end date`;
+  }
+  return '';
 }
 
 function updateEntryChips(id){
@@ -1726,18 +2309,42 @@ function updateEntryChips(id){
   if(mChip) mChip.textContent = (isMini?'':'💰 ') + fmtMoney(calc.total);
   if(bChip) bChip.textContent = calcBreakdownText(calc);
 
+  /* The heading carries the 🌙 badge, and until now only a full
+     re-render refreshed it - so an overnight detected mid-edit showed the
+     hours but not the moon. */
+  const lbl = document.getElementById('entry-lbl-' + id);
+  if(lbl){
+    const idx = entries.indexOf(e);
+    const segs = e.segments||[];
+    lbl.textContent = isMini
+      ? `#${idx+1}${overnight?' 🌙':''}${segs.length?' ⚡':''}${e.description?' — '+e.description:''}`
+      : `ENTRY #${idx+1}${overnight?' 🌙 Overnight':''}`;
+  }
+  const warnEl = document.getElementById('warn-' + id);
+  if(warnEl){ const w=shiftWarning(e); warnEl.textContent=w; warnEl.style.display=w?'block':'none'; }
+
   const sdFmt = document.getElementById('fmt-sd-' + id);
   const edFmt = document.getElementById('fmt-ed-' + id);
   if(sdFmt) sdFmt.textContent = fmtDate(e.startDate, settings.dateFormat);
   if(edFmt) edFmt.textContent = fmtDate(e.endDate, settings.dateFormat);
-
-  const lbl = document.getElementById('entry-lbl-' + id);
-  if(lbl) lbl.textContent = 'ENTRY #' + (entries.indexOf(e) + 1) + (overnight ? ' 🌙 Overnight' : '');
 }
 function renderEntries(){
   const list=document.getElementById('entries-list');
   list.innerHTML='';
   renderFilterBar();
+  const calEl=document.getElementById('cal-view');
+  if(viewMode==='cal'){
+    /* The calendar draws its own cards for the selected day, using the
+       same entry-${id} ids the list uses - so the list has to be empty,
+       or getElementById would hit the hidden copy first. */
+    if(calEl){ calEl.style.display='block'; renderCalendar(); }
+    updateSummary();
+    document.getElementById('total-bar').style.display=visibleEntries().length?'flex':'none';
+    const cb=document.getElementById('btn-clear-entries'); if(cb) cb.style.display='none';
+    const tb=document.getElementById('btn-toggle-all');   if(tb) tb.style.display='none';
+    return;
+  }
+  if(calEl){ calEl.style.display='none'; calEl.innerHTML=''; }
   const shown=visibleEntries();
   if(!shown.length && entries.length){
     list.innerHTML=`<div class="no-month-data">Nothing in this view.<br><span style="font-size:13px">${entries.filter(e=>e.archived).length&&viewPeriod!=='archived'?'Some entries are archived — switch the dropdown to Archived to see them.':'Try All time, or a different contract.'}</span></div>`;
@@ -1830,15 +2437,23 @@ function entryHTML(e,idx){
     ${contracts.length?`
     <div style="margin-bottom:10px">
       <label class="lbl">Contract</label>
-      <select onchange="updateEntryField('${e.id}','contractId',this.value);renderFilterBar()">
+      <select onchange="setEntryContract('${e.id}',this.value)">
         <option value=""${!e.contractId?' selected':''}>— Unassigned —</option>
         ${contracts.map(c=>`<option value="${c.id}"${e.contractId===c.id?' selected':''}>${esc(c.name)}</option>`).join('')}
+      </select>
+    </div>`:''}
+    ${contractSites(e.contractId).length?`
+    <div style="margin-bottom:10px">
+      <label class="lbl">Site</label>
+      <select onchange="updateEntryField('${e.id}','siteId',this.value);renderFilterBar()">
+        <option value=""${!e.siteId?' selected':''}>— No site —</option>
+        ${contractSites(e.contractId).map(st=>`<option value="${st.id}"${e.siteId===st.id?' selected':''}>${esc(st.name)}</option>`).join('')}
       </select>
     </div>`:''}
     <div class="entry-grid">
       <div>
         <label class="lbl">Start Date</label>
-        <input type="date" value="${e.startDate}" onchange="updateEntryField('${e.id}','startDate',this.value)">
+        <input type="date" id="sd-${e.id}" value="${e.startDate}" onchange="updateEntryField('${e.id}','startDate',this.value)">
         <div class="date-fmt" id="fmt-sd-${e.id}">${fmtDate(e.startDate,settings.dateFormat)}</div>
       </div>
       <div>
@@ -1847,7 +2462,7 @@ function entryHTML(e,idx){
       </div>
       <div>
         <label class="lbl">End Date</label>
-        <input type="date" value="${e.endDate}" onchange="updateEntryField('${e.id}','endDate',this.value)">
+        <input type="date" id="ed-${e.id}" value="${e.endDate}" onchange="updateEntryField('${e.id}','endDate',this.value)">
         <div class="date-fmt" id="fmt-ed-${e.id}">${fmtDate(e.endDate,settings.dateFormat)}</div>
       </div>
       <div>
@@ -1903,7 +2518,9 @@ function entryHTML(e,idx){
       <span class="calc-chip" id="chip-h-${e.id}">⏱ ${fmtHours(calc.totalHours)}</span>
       <span class="calc-chip" id="chip-m-${e.id}">💰 ${fmtMoney(calc.total)}</span>
       ${segs.length>0?`<span class="calc-chip seg-total" id="chip-breakdown-${e.id}">${calcBreakdownText(calc)}</span>`:''}
-    </div>`;
+    </div>
+    <div class="shift-warn" id="warn-${e.id}" style="display:${shiftWarning(e)?'block':'none'}">${esc(shiftWarning(e))}</div>
+    <div>`;
 }
 
 function segmentHTML(e,s){
@@ -2121,7 +2738,8 @@ function updatePeriodPreview(){
                          : 'Current period: '+pr.label;
 }
 function setExportLastPeriod(){ setExportPeriod(-1); }
-function setExportContract(id){ expContract=id; renderExportContracts(); updatePreview(); }
+function setExportContract(id){ expContract=id; expSite=''; saveAll(); renderExportContracts(); updatePreview(); }
+function setExportSite(id){ expSite=id; saveAll(); renderExportContracts(); updatePreview(); }
 function setExportArchived(on){ expIncludeArchived=!!on; saveAll(); updatePreview(); }
 /* Counts what the range would hold if nothing were filtered out, so the
    preview can say plainly why its number differs from the list's. */
@@ -2142,10 +2760,13 @@ function exportExclusions(){
   const archived = inRange.filter(e=>e.archived).length;
   const otherContract = inRange.filter(e=>{
     if(e.archived && !expIncludeArchived) return false;
-    if(expContract==='__none') return !!e.contractId;
-    return expContract && e.contractId!==expContract;
+    return !matchesContractSite(e, expContract, '');
   }).length;
-  return {archived, otherContract};
+  const otherSite = inRange.filter(e=>{
+    if(e.archived && !expIncludeArchived) return false;
+    return matchesContractSite(e, expContract, '') && !matchesContractSite(e, expContract, expSite);
+  }).length;
+  return {archived, otherContract, otherSite};
 }
 function renderExportContracts(){
   const bar=document.getElementById('exp-contracts');
@@ -2155,7 +2776,7 @@ function renderExportContracts(){
   let out=chip('','All contracts');
   contracts.forEach(c=>{ out+=chip(c.id,c.name); });
   if(entries.some(e=>!e.contractId)) out+=chip('__none','Unassigned');
-  bar.innerHTML=`<div class="fchips">${out}</div>`;
+  bar.innerHTML=`<div class="fchips">${out}</div>${siteChipsHTML(expContract, expSite, 'setExportSite', false)}`;
 }
 
 function setExportThisMonth(){
@@ -2338,8 +2959,7 @@ function getFilteredEntries(){
        list. Tick "include archived" to re-invoice an old period that has
        since been tidied away - the preview always says which it did. */
     if(e.archived && !expIncludeArchived) return false;
-    if(expContract==='__none'){ if(e.contractId) return false; }
-    else if(expContract && e.contractId!==expContract) return false;
+    if(!matchesContractSite(e, expContract, expSite)) return false;
     if(!e.startDate) return true;
     /* A shift belongs to the day it started. The list, the History tabs
        and the period grouping all place an entry by e.startDate, so the
@@ -2403,6 +3023,7 @@ function updatePreview(){
       if(ex.archived && !expIncludeArchived) bits.push(`${ex.archived} archived ${ex.archived===1?'entry is':'entries are'} excluded — tick “Include archived” to invoice ${ex.archived===1?'it':'them'}`);
       if(ex.archived && expIncludeArchived)  bits.push(`includes ${ex.archived} archived ${ex.archived===1?'entry':'entries'}`);
       if(ex.otherContract) bits.push(`${ex.otherContract} ${ex.otherContract===1?'entry is':'entries are'} on another contract`);
+      if(ex.otherSite) bits.push(`${ex.otherSite} ${ex.otherSite===1?'entry is':'entries are'} at another site`);
       noteEl.innerHTML = bits.length ? '⚠️ '+bits.map(esc).join('<br>⚠️ ') : '';
       noteEl.style.display = bits.length ? 'block' : 'none';
     }
@@ -2476,8 +3097,7 @@ function buildMonthTabs(){
   const map = {};                       /* period start ISO -> {pr, entries[]} */
   entries.forEach(e=>{
     if(!e.startDate) return;
-    if(histContract==='__none'){ if(e.contractId) return; }
-    else if(histContract && e.contractId!==histContract) return;
+    if(!matchesContractSite(e, histContract, histSite)) return;
     const pr = periodFor(e.startDate, startDay);
     if(!map[pr.key]) map[pr.key] = {pr, entries:[]};
     map[pr.key].entries.push(e);
@@ -2530,7 +3150,8 @@ function buildMonthTabs(){
 /* The history tab gets its own contract filter, independent of the main
    list - looking back over one contract should not disturb what you were
    working on. */
-function setHistContract(id){ histContract=id; activeMonthKey=null; buildMonthTabs(); }
+function setHistContract(id){ histContract=id; histSite=''; activeMonthKey=null; buildMonthTabs(); }
+function setHistSite(id){ histSite=id; activeMonthKey=null; buildMonthTabs(); }
 function renderHistContracts(){
   const bar=document.getElementById('hist-contracts');
   if(!bar) return;
@@ -2539,7 +3160,7 @@ function renderHistContracts(){
   let out=chip('','All');
   contracts.forEach(c=>{ out+=chip(c.id,c.name); });
   if(entries.some(e=>!e.contractId)) out+=chip('__none','Unassigned');
-  bar.innerHTML=`<div class="fchips">${out}</div>`;
+  bar.innerHTML=`<div class="fchips">${out}</div>${siteChipsHTML(histContract, histSite, 'setHistSite', false)}`;
 }
 
 function renderMonthContent(key, monthEntries, label){
